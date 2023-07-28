@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -72,6 +73,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'messenger.wsgi.application'
+ASGI_APPLICATION = 'messenger.asgi.application'
 
 
 # Database
@@ -127,3 +129,10 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'chating_user.User'
+
+CHANNEL_LAYERS = {
+    "BACKEND": "channels_redis.core.RedisChannelLayer",
+    "CONFIG": {
+        "hosts": [("0.0.0.0", 6379)]
+    }
+}
