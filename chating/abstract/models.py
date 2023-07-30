@@ -1,4 +1,6 @@
 import uuid
+
+from channels.db import database_sync_to_async
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
@@ -6,6 +8,14 @@ from django.http import Http404
 
 class AbstractManager(models.Manager):
     def get_object_by_public_id(self, public_id):
+        try:
+            instance = self.get(public_id=public_id)
+            return instance
+        except (ValueError, TypeError, ObjectDoesNotExist):
+            raise Http404
+
+    @database_sync_to_async
+    def async_get_object_by_public_id(self, public_id):
         try:
             instance = self.get(public_id=public_id)
             return instance

@@ -21,7 +21,7 @@ class WebsocketJWTAuthMiddleware:
 
     async def __call__(self, scope, receive, send):
         query_dict = parse_qs(scope["query_string"])
-        token = query_dict[b"token"][0].encode("UTF-8")
+        token = query_dict[b"token"][0].decode("UTF-8")
 
         try:
             access_token = AccessToken(token)

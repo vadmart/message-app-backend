@@ -2,6 +2,9 @@ from django.db import models
 from phonenumber_field import modelfields
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from chating.abstract.models import AbstractModel, AbstractManager
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
+from channels.db import database_sync_to_async
 from django.utils.translation import gettext_lazy as _
 
 

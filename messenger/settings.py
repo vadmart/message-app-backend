@@ -11,10 +11,10 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
@@ -26,7 +26,6 @@ SECRET_KEY = 'django-insecure-#ci-a7y7s1k6phwea6$e1c&p(_$ucl(unz#wyik7_dlwwn2j95
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -75,8 +74,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'messenger.wsgi.application'
-ASGI_APPLICATION = 'messenger.asgi.application'
-
+ASGI_APPLICATION = 'messenger.routing.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
@@ -87,7 +85,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -107,7 +104,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
@@ -118,7 +114,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
@@ -133,12 +128,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'chating_user.User'
 
 CHANNEL_LAYERS = {
-    "BACKEND": "channels_redis.core.RedisChannelLayer",
-    "CONFIG": {
-        "hosts": [("0.0.0.0", 6379)]
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)]
+        }
     }
 }
 
 SIMPLE_JWT = {
-    "TOKEN_OBTAIN_SERIALIZER": "chating.auth.serializers.TokenSerializer"
+    "TOKEN_OBTAIN_SERIALIZER": "chating.auth.serializers.TokenSerializer",
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(weeks=1)
 }
+
+AUTHENTICATION_BACKENDS = ["chating.auth.backends.MessengerModelBackend"]
