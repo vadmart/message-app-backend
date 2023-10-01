@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "566448636678",
+    "project_id": "messagulia",
+    "storage_bucket": "messagulia.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:566448636678:android:6f4a8d38c3e30713335487",
+        "android_client_info": {
+          "package_name": "com.vdm.MessageAppClient"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAA0FzwT7Thqp7NxFDdKjJOsLq3dYb2Smo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

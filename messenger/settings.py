@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-import os
+
 from pathlib import Path
 from datetime import timedelta
 
@@ -25,9 +25,7 @@ SECRET_KEY = 'django-insecure-#ci-a7y7s1k6phwea6$e1c&p(_$ucl(unz#wyik7_dlwwn2j95
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
-CORS_ALLOW_ALL_ORIGINS = True
-
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -40,17 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
-    'rest_framework_simplejwt',
     'phonenumber_field',
     'chating',
-    'chating.auth.user',
-    'chating.auth',
-    'corsheaders',
+    'chating.user',
+    'chating.auth'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -79,19 +74,15 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'messenger.wsgi.application'
-ASGI_APPLICATION = 'messenger.asgi.application'
+ASGI_APPLICATION = 'messenger.routing.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'messenger',
-        'PASSWORD': os.environ.get('POSTGRESQL_PASSWORD'),
-        'USER': 'postgres',
-        'HOST': 'localhost',
-        'PORT': 5432
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -145,24 +136,10 @@ CHANNEL_LAYERS = {
     }
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379"
-    }
-}
-
 SIMPLE_JWT = {
-    "TOKEN_OBTAIN_SERIALIZER": "chating.auth.login.serializers.TokenSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "chating.auth.serializers.TokenSerializer",
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
-    "REFRESH_TOKEN_LIFETIME": timedelta(weeks=1),
-    "USER_ID_FIELD": "public_id"
+    "REFRESH_TOKEN_LIFETIME": timedelta(weeks=1)
 }
 
-AUTHENTICATION_BACKENDS = ['chating.auth.user.backends.MessengerModelBackend']
-
-REST_FRAMEWORK = {
-        'DEFAULT_AUTHENTICATION_CLASSES': (
-            'rest_framework_simplejwt.authentication.JWTAuthentication',
-        ),
-    }
+AUTHENTICATION_BACKENDS = ["chating.auth.backends.MessengerModelBackend"]
