@@ -2,39 +2,34 @@ from django.db import models
 from phonenumber_field import modelfields
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from chating.abstract.models import AbstractModel, AbstractManager
-from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404
-from channels.db import database_sync_to_async
+from pyotp import random_base32
 from django.utils.translation import gettext_lazy as _
 
 
-def user_directory_path(instance, filename):
+def user_directory_path(instance, filename: str) -> str:
     return f"{instance.user.id}/{filename}"
 
 
 class UserManager(AbstractManager, BaseUserManager):
-    def create_user(self, phone_number, username, password, **kwargs):
+    def create_user(self, phone_number, username, **kwargs):
         if not phone_number:
             raise ValueError(_("User must have a phone number!"))
         if not username:
             raise ValueError(_("User must have a username!"))
-        if not password:
-            raise ValueError(_("User must have a password!"))
         user = self.model(username=username,
                           phone_number=phone_number,
                           **kwargs)
-        user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, phone_number, username, password, **kwargs):
+    def create_superuser(self, phone_number, username, **kwargs):
         if not phone_number:
             raise ValueError(_("Superuser must have a phone number!"))
         if not username:
             raise ValueError(_("Superuser must have a username!"))
-        if not password:
-            raise ValueError(_("Superuser must have a password!"))
-        user = self.create_user(phone_number, username, password, **kwargs)
+        user = self.model(username=username,
+                          phone_number=phone_number,
+                          **kwargs)
         user.is_superuser = True
         user.save(using=self._db)
         return user
@@ -47,6 +42,9 @@ class User(AbstractBaseUser, AbstractModel):
     last_name = models.CharField(max_length=150, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
     avatar = models.ImageField(upload_to=user_directory_path, null=True, blank=True)
+    otp_code = models.CharField(max_length=6, null=True, blank=True)
+    password = None
+
     is_active = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
 
@@ -55,3 +53,8 @@ class User(AbstractBaseUser, AbstractModel):
 
     def __str__(self):
         return self.username
+
+
+class ChatProfile(AbstractModel):
+    user = models.OneToOneField(to=User, on_delete=models.CASCADE)
+    one_signal_app_id = models.CharField(max_length=36)
