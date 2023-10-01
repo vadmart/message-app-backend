@@ -3,5 +3,5 @@ from django.apps import AppConfig
 
 class UserConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'chating.user'
+    name = 'chating.auth.user'
     label = 'chating_user'

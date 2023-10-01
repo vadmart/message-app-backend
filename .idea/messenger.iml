@@ -14,7 +14,7 @@
   </component>
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$" />
-    <orderEntry type="jdk" jdkName="Python 3.11.4 WSL (Ubuntu): (/home/vadim/.cache/pypoetry/virtualenvs/messenger-qMP_8Aqe-py3.11/bin/python)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Poetry (messenger)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TemplatesService">

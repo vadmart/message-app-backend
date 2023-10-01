@@ -12,3 +12,6 @@ class Replica(AbstractModel):
 
     def __str__(self):
         return f"From: {self.user_from}, to: {self.user_to}, content: {self.content}"
+
+    class Meta:
+        ordering = ["-created_at"]
