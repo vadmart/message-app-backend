@@ -1,40 +1,49 @@
-from django.db.models import QuerySet
+from uuid import UUID
+from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import viewsets
-from chating.models import Replica
-from chating.serializers import ReplicaSerializer
+from rest_framework import viewsets, status
+from rest_framework.response import Response
+
+from chating.auth.user.models import User
+from chating.models import Message, Chat
+from chating.serializers import MessageSerializer
 from chating.push import OneSignalPushNotifications
 
 
 class ChatViewSet(viewsets.ModelViewSet):
-    http_method_names = ["get"]
+    http_method_names = ["get", "post", "put", "patch", "delete"]
     permission_classes = [IsAuthenticated]
-    serializer_class = ReplicaSerializer
+    serializer_class = MessageSerializer
 
     def get_queryset(self):
-        print(f"I'm {self.request.user}")
-        queryset_user_from = Replica.objects.filter(user_from=self.request.user)
-        queryset_user_to = Replica.objects.filter(user_to=self.request.user)
-        merged_qs = queryset_user_from | queryset_user_to
-        # prepared_messages = self.__prepare_recent_messages(queryset_user_to, queryset_user_from)
-        print(merged_qs)
-        # serializer.is_valid()
-        return merged_qs
+        chats = Chat.objects.filter(first_user=self.request.user) | Chat.objects.filter(second_user=self.request.user)
+        messages = []
+        for chat in chats:
+            messages.append(chat.message_set.first())
+        messages.sort(key=lambda item: item.created_at, reverse=True)
+        return messages
 
-    @staticmethod
-    def __prepare_recent_messages(first_replicas_collection: QuerySet,
-                                  second_replicas_collection: QuerySet) -> QuerySet[Replica] | list[Replica]:
-        prepared_messages = []
-        if not first_replicas_collection:
-            return second_replicas_collection
-        elif not second_replicas_collection:
-            return first_replicas_collection
-        for first, second in zip(first_replicas_collection, second_replicas_collection):
-            if first.user_from == second.user_to:
-                if first.created_at > second.created_at:
-                    prepared_messages.append(first)
-                else:
-                    prepared_messages.append(second)
-        return Replica.objects.filter(user_from__in=prepared_messages)
+    def create(self, request, *args, **kwargs):
+        chat = self.__get_chat(sender=request.user,
+                               receiver=get_object_or_404(User, public_id=request.data["receiver"]))
+        creation_data = {"content": request.data["content"], "chat": chat.public_id,
+                         "sender": request.data["receiver"]}
+        serializer = self.get_serializer(data=creation_data)
+        serializer.is_valid(raise_exception=True)
+        message = serializer.save()
+        self.__send_push_notification(message=message)
+        headers = self.get_success_headers(serializer.data)
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    def __send_push_notification(self, message: Message):
+        receiver = message.chat.second_user if self.request.user == message.chat.first_user else message.chat.first_user
+        push_notification = OneSignalPushNotifications(subscription_id=receiver.chatprofile.one_signal_app_id,
+                                                       message=message.content)
+        push_notification.send_notification()
 
+    def __get_chat(self, sender: User, receiver: User) -> Chat:
+        chats = (Chat.objects.filter(first_user=sender, second_user=receiver) |
+                 Chat.objects.filter(first_user=receiver, second_user=sender))
+        if chats:
+            return chats[0]
+        return Chat.objects.create(first_user=sender, second_user=receiver)

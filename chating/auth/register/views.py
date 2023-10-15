@@ -1,6 +1,6 @@
 import pyotp
 from rest_framework.response import Response
-from chating.auth.register.serializers import UserSerializer
+from chating.auth.user.serializers import UserSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework import viewsets, status
 from rest_framework_simplejwt.tokens import RefreshToken

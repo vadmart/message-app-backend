@@ -32,7 +32,6 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -87,7 +86,7 @@ ASGI_APPLICATION = 'messenger.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'messenger',
+        'NAME': 'messageapp',
         'PASSWORD': os.environ.get('POSTGRESQL_PASSWORD'),
         'USER': 'postgres',
         'HOST': 'localhost',

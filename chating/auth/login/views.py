@@ -32,7 +32,7 @@ class UserAuthView(TokenObtainPairView):
 class UserVerifyView(APIView):
     def post(self, request):
         if isinstance(request.user, AnonymousUser):
-            return Response(data={"data": "User hasn't been authorized!"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(data={"data": "User hasn't been authorized"}, status=status.HTTP_401_UNAUTHORIZED)
         if not otp.verify(otp=request.data.get("otp_code")):
-            return Response(data={"detail": "Otp code is not valid or is expired!"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(data={"detail": "OTP code is invalid or expired"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_200_OK)

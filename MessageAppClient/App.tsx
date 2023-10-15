@@ -13,22 +13,27 @@ import LoginForm from "./src/screens/LoginForm";
 import MainScreen from './src/screens/MainScreen';
 import { AppBaseURL } from './src/AppBaseURL';
 import axios from 'axios';
-
-
-const Stack = createNativeStackNavigator();
+// import { Auth } from './src/Auth';
 
 OneSignal.Debug.setLogLevel(LogLevel.Verbose); // for OneSignal Debugging
 OneSignal.initialize("ONESIGNAL_APP_ID");
 
+OneSignal.Notifications.requestPermission(true);
+
 // Method for listening for notification clicks
 OneSignal.Notifications.addEventListener("click", (event) => {
-    console.log(`OneSignal: notification clicked: ${event}`);
+    console.log("OneSignal: notification clicked: ");  
+    console.log(event);
 })
 
-type Auth = {
-    access: string
-    refresh: string
-    user: object
+
+const Stack = createNativeStackNavigator();
+
+
+const ScreenNames = {
+    REGISTRATION: "Registration",
+    LOGIN: "Login",
+    MAIN_SCREEN: "MainScreen"
 }
 
 
@@ -37,31 +42,27 @@ function App() {
         Poppins: require("./assets/fonts/Poppins-Regular.ttf")
     });
 
-    if (!fontsLoaded) return null;
-
     const [loaded, setLoaded] = useState(false);
-    const [replicas, setReplicas] = useState([]);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState("");
     const [refreshed, setRefreshed] = useState(false);
+    const [initScreenName, setInitScreenName] = useState("");
+
 
     useEffect(() => {
         const authDataString = storage.getString("auth");
         if (!authDataString) return;
-        const authData: Auth = JSON.parse(authDataString);
-        axios.get(AppBaseURL + "get-replicas/", {
-            headers: {
-                Authorization: `Bearer ${authData.access}`
-            }
+        const authData = JSON.parse(authDataString);
+        axios.post(AppBaseURL + "auth/token/verify/", {
+            "token": authData.access
         })
-        .then((response) => {
-            // console.log(response.data);
-            setReplicas(response.data);
+        .then(() => {
+            setInitScreenName(ScreenNames.MAIN_SCREEN);
             setLoaded(true);
         })
         .catch((e) => {
             // if status is 401, it means our access token is expired. Trying to get another one.
-            if (e.response.status == 401) {
-                axios.post(AppBaseURL + "auth/refresh/", {
+            if (e.response.status == 401 && e.response.data["code"] == "token_not_valid") {
+                axios.post(AppBaseURL + "auth/token/refresh/", {
                     "refresh": authData.refresh
                 })
                 .then((response) => {
@@ -71,25 +72,29 @@ function App() {
                 })
                 .catch((e) => {
                     setError(e);
+                    setInitScreenName(ScreenNames.LOGIN);
                     setLoaded(true);
                 })
             } else {
                 setError(e);
+                setInitScreenName(ScreenNames.REGISTRATION);
+                setLoaded(true);
+                console.error("Something's wrong. Error: " + e);
             }
         })
     }, [refreshed])
     
+    if (!fontsLoaded || !loaded) return null;
     // if (!loaded) return null;
-
-
+    console.log(`Current screen is: ${initScreenName}`)
 
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar backgroundColor={'#001100'} />
             <NavigationContainer>
-                    <Stack.Navigator initialRouteName={(replicas) ? "MainScreen" : "Login"} screenOptions={{headerShown: false}}>
-                        <Stack.Screen component={MainScreen} name="MainScreen" initialParams={{replicas: replicas}}/>
-                        <Stack.Screen component={LoginForm} name="Login" />
+                    <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName={initScreenName}>
+                        <Stack.Screen component={LoginForm} name={ScreenNames.LOGIN} />
+                        <Stack.Screen component={MainScreen} name={ScreenNames.MAIN_SCREEN}/>
                     </Stack.Navigator>
             </NavigationContainer>
         </SafeAreaView>

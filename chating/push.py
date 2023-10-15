@@ -1,7 +1,7 @@
 import os
 from typing import Any, Iterable
 import requests
-from chating.models import Replica
+from chating.auth.user.models import User
 
 
 class OneSignalPushNotifications:
@@ -16,13 +16,12 @@ class OneSignalPushNotifications:
     }
 
     def __init__(self, subscription_id: str, message: str):
-        self.subscription_id: str = subscription_id
-        self.message: str = message
+        self.subscription_id = subscription_id
+        self.message = message
 
     def send_notification(self) -> None:
         current_payload = self.payload.copy()
         current_payload["include_subscription_ids"] = [self.subscription_id]
-        current_payload["contents"] = {}
-        current_payload["contents"]["en"] = self.message
+        current_payload["contents"] = {"en": self.message}
         res = requests.post(self.BASE_URL, json=current_payload)
         print(res)
