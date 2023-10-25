@@ -56,5 +56,5 @@ class User(AbstractBaseUser, AbstractModel):
 
 
 class ChatProfile(AbstractModel):
-    user = models.OneToOneField(to=User, on_delete=models.CASCADE)
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
     one_signal_app_id = models.CharField(max_length=36)

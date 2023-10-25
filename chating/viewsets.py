@@ -11,7 +11,7 @@ from chating.push import OneSignalPushNotifications
 
 
 class ChatViewSet(viewsets.ModelViewSet):
-    http_method_names = ["get", "post", "put", "patch", "delete"]
+    http_method_names = ["get", "delete"]
     permission_classes = [IsAuthenticated]
     serializer_class = MessageSerializer
 
@@ -23,11 +23,17 @@ class ChatViewSet(viewsets.ModelViewSet):
         messages.sort(key=lambda item: item.created_at, reverse=True)
         return messages
 
+
+class MessageViewSet(viewsets.ModelViewSet):
+    serializer_class = MessageSerializer
+    http_method_names = ["get", "post", "patch", "put", "delete"]
+    queryset = Message.objects.all()
+
     def create(self, request, *args, **kwargs):
         chat = self.__get_chat(sender=request.user,
                                receiver=get_object_or_404(User, public_id=request.data["receiver"]))
         creation_data = {"content": request.data["content"], "chat": chat.public_id,
-                         "sender": request.data["receiver"]}
+                         "sender": request.user.public_id}
         serializer = self.get_serializer(data=creation_data)
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
@@ -37,8 +43,9 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     def __send_push_notification(self, message: Message):
         receiver = message.chat.second_user if self.request.user == message.chat.first_user else message.chat.first_user
-        push_notification = OneSignalPushNotifications(subscription_id=receiver.chatprofile.one_signal_app_id,
-                                                       message=message.content)
+        push_notification = OneSignalPushNotifications(
+            subscription_ids=list(receiver.chatprofile_set.all().values_list("one_signal_app_id", flat=True)),
+            message=message)
         push_notification.send_notification()
 
     def __get_chat(self, sender: User, receiver: User) -> Chat:

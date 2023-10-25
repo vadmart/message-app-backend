@@ -6,6 +6,7 @@ import { errInputStyle, errLabelStyle } from "../../errorStyle";
 import { BaseURL } from "./BaseURL";
 import FormButton from "../FormButton";
 import FormContainer from "../../FormContainer";
+import { OneSignal } from "react-native-onesignal";
 
 
 const PageTwo = ({ route, navigation }) => {
@@ -15,6 +16,7 @@ const PageTwo = ({ route, navigation }) => {
         console.log(otpCode);
         axios.post(BaseURL + "verify/", {
             "otp_code": otpCode,
+            "one_signal_app_id": OneSignal.User.pushSubscription.getPushSubscriptionId(),
         }, {
             headers: {
                 Authorization: `Bearer ${accessToken}`

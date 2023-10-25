@@ -18,13 +18,13 @@ import axios from 'axios';
 OneSignal.Debug.setLogLevel(LogLevel.Verbose); // for OneSignal Debugging
 OneSignal.initialize("ONESIGNAL_APP_ID");
 
-OneSignal.Notifications.requestPermission(true);
-
 // Method for listening for notification clicks
 OneSignal.Notifications.addEventListener("click", (event) => {
     console.log("OneSignal: notification clicked: ");  
     console.log(event);
 })
+
+console.log(OneSignal.User.pushSubscription.getPushSubscriptionId());
 
 
 const Stack = createNativeStackNavigator();
@@ -45,13 +45,17 @@ function App() {
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState("");
     const [refreshed, setRefreshed] = useState(false);
-    const [initScreenName, setInitScreenName] = useState("");
+    const [initScreenName, setInitScreenName] = useState(ScreenNames.REGISTRATION);
 
 
     useEffect(() => {
         const authDataString = storage.getString("auth");
-        if (!authDataString) return;
+        if (!authDataString) {
+            setLoaded(true);
+            return
+        };
         const authData = JSON.parse(authDataString);
+        console.log(authData);
         axios.post(AppBaseURL + "auth/token/verify/", {
             "token": authData.access
         })
@@ -79,7 +83,6 @@ function App() {
                 setError(e);
                 setInitScreenName(ScreenNames.REGISTRATION);
                 setLoaded(true);
-                console.error("Something's wrong. Error: " + e);
             }
         })
     }, [refreshed])
@@ -94,7 +97,7 @@ function App() {
             <NavigationContainer>
                     <Stack.Navigator screenOptions={{headerShown: false}} initialRouteName={initScreenName}>
                         <Stack.Screen component={LoginForm} name={ScreenNames.LOGIN} />
-                        <Stack.Screen component={MainScreen} name={ScreenNames.MAIN_SCREEN}/>
+                        <Stack.Screen component={MainScreen} name={ScreenNames.MAIN_SCREEN} />
                     </Stack.Navigator>
             </NavigationContainer>
         </SafeAreaView>

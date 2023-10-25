@@ -57,7 +57,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
         chat = await aget_chat(sender=self.scope["user"], receiver=user_to)
         await Message.objects.acreate(chat=chat, sender=self.scope["user"], content=content)
         try:
-            push_notification = OneSignalPushNotifications(subscription_id=await aget_onesignal_id_by_user(user_to),
+            push_notification = OneSignalPushNotifications(subscription_ids=await aget_onesignal_id_by_user(user_to),
                                                            message=content)
             push_notification.send_notification()
         except Exception as e:

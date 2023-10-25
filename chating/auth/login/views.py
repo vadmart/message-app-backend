@@ -35,4 +35,6 @@ class UserVerifyView(APIView):
             return Response(data={"data": "User hasn't been authorized"}, status=status.HTTP_401_UNAUTHORIZED)
         if not otp.verify(otp=request.data.get("otp_code")):
             return Response(data={"detail": "OTP code is invalid or expired"}, status=status.HTTP_400_BAD_REQUEST)
+        if request.data.get("one_signal_app_id"):
+            ChatProfile.objects.create(user=request.user, one_signal_app_id=request.data["one_signal_app_id"])
         return Response(status=status.HTTP_200_OK)

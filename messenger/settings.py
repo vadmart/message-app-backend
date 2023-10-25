@@ -89,8 +89,8 @@ DATABASES = {
         'NAME': 'messageapp',
         'PASSWORD': os.environ.get('POSTGRESQL_PASSWORD'),
         'USER': 'postgres',
-        'HOST': 'localhost',
-        'PORT': 5432
+        'HOST': os.environ.get("POSTGRESQL_HOST"),
+        'PORT': os.environ.get("POSTGRESQL_PORT")
     }
 }
 
@@ -153,6 +153,7 @@ CACHES = {
 
 SIMPLE_JWT = {
     "TOKEN_OBTAIN_SERIALIZER": "chating.auth.login.serializers.TokenSerializer",
+    "TOKEN_VERIFY_SERIALIZER": "chating.auth.verify.serializers.UserTokenVerifySerializer",
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(weeks=1),
     "USER_ID_FIELD": "public_id"
