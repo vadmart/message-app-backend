@@ -88,7 +88,7 @@ function App() {
     }, [refreshed])
     
     if (!fontsLoaded || !loaded) return null;
-    // if (!loaded) return null;
+
     console.log(`Current screen is: ${initScreenName}`)
 
     return (

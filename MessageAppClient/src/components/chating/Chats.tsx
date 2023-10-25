@@ -5,22 +5,12 @@ import {AppBaseURL} from "../../AppBaseURL";
 import { storage } from "../Storage";
 import { Auth } from "../../Auth";
 import { NotificationWillDisplayEvent, OneSignal } from "react-native-onesignal";
+import { Message } from "./MessageType";
 
 
-interface MessageInfo {
-    chat: string,
-    sender: string, 
-    created_at: string,
-    edited_at: string
-}
-
-interface Message extends MessageInfo {
-    content?: string,
-};
-
-function isMessageInfo(obj: any): obj is MessageInfo {
-    return "chat" in obj && "sender" in obj && "created_at" in obj && "edited_at" in obj
-}
+// function isMessageInfo(obj: any): obj is MessageInfo {
+//     return "chat" in obj && "sender" in obj && "created_at" in obj && "edited_at" in obj
+// }
 
 function isAMessage(obj: any): obj is Message {
     return "chat" in obj && "sender" in obj && "created_at" in obj && "edited_at" in obj
@@ -79,7 +69,7 @@ function Chats({route, navigation}) {
                     return (
                         <Pressable style={styles.message} onPress={(e, data=item) => {
                             console.log(data);
-                            navigation.navigate("Chat", {data: data});
+                            navigation.navigate("Chat", {chatData: data});
                         }
                             }>
                             <View style={styles.senderTextBlock}>
@@ -119,7 +109,6 @@ const styles = StyleSheet.create({
         fontWeight: "bold"
     },
     messageText: {
-
         fontSize: 20,
     },
     dateBlock: {
@@ -129,6 +118,6 @@ const styles = StyleSheet.create({
     messageDate: {},
     messageData: {
         display: "none"
-    }
+    },
 })
 export default Chats;

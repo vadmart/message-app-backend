@@ -27,7 +27,10 @@ class ChatViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     http_method_names = ["get", "post", "patch", "put", "delete"]
-    queryset = Message.objects.all()
+
+    def get_queryset(self):
+        chat_id = self.request.query_params["chat_id"]
+        return Message.objects.filter(chat__public_id=chat_id).order_by("created_at")
 
     def create(self, request, *args, **kwargs):
         chat = self.__get_chat(sender=request.user,
