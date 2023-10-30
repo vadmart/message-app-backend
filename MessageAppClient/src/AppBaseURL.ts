@@ -1,1 +1,1 @@
-export const AppBaseURL = "https://81bc-178-150-167-216.ngrok-free.app/api/v1/";
+export const AppBaseURL = "http://10.0.2.2:8000/api/v1/";

@@ -34,7 +34,9 @@ function getNewChatsByChangingContent(event: NotificationWillDisplayEvent, chats
     return chats
 }
 
-function Chats({route, navigation}) {
+function Chats({route, navigation, props}) {
+
+    console.log(props);
 
     const [chats, setChats] = useState<Message[] | null>(null);
     console.log(route)

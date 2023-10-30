@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { View, Text, StyleSheet, FlatList, TextInput, Image, Pressable } from "react-native";
 import { AppBaseURL } from "../../AppBaseURL";
 import { storage } from "../Storage";
 import axios from 'axios';
 import { Message } from "./MessageType";
+import { isEnabled } from "react-native/Libraries/Performance/Systrace";
 
 function Chat({route}) {
     const [messages, setMessages] = useState(null);
     const chatData = route.params["chatData"];
+
+    const [inputtedData, setInputtedData] = useState("");
 
     const strAuthData = storage.getString("auth");
     if (!strAuthData) return
@@ -31,42 +34,44 @@ function Chat({route}) {
             <FlatList
             style={{paddingTop: 10}} 
             data={messages}
-            renderItem={({item}: {item: Message}) => {
-                const [date, time] = item.created_at.split(" ");
-                return (
-                    <View>
-                        <View style={styles.dateBlock}>
-                            <View style={styles.date}>
-                                <Text style={styles.dateText}>{date}</Text>
-                            </View>    
-                        </View>
-                        <View style={styles.messageBlock}>
-                            <View style={styles.avatarBlock}>
-                                <View style={styles.avatar}>
-                                    <Text style={styles.avatarText}>f</Text>
-                                </View>
+            renderItem={({item, index}: {item: Message, index: number})=> {
+                    const [date, time] = item.created_at.split(" ");
+                    const previousDate = (index !== 0) ? messages[index - 1].created_at.split(" ")[0] : null; 
+                    return (<View>
+                            <View style={styles.dateBlock}>
+                                <View style={styles.date}>
+                                    <Text style={styles.dateText}>{(date !== previousDate) ? date : ""}</Text>
+                                </View>    
                             </View>
-                            <View style={styles.rightBlock}>
-                                <View style={styles.contentTimeBlock}>
-                                    <View style={styles.contentBlock}>
-                                        <Text style={styles.content}>{item.content}</Text>
-                                    </View>
-                                    <View style={styles.timeBlock}>
-                                        <Text style={styles.time}>{time}</Text>
+                            <View style={styles.messageBlock}>
+                                <View style={styles.avatarBlock}>
+                                    <View style={styles.avatar}>
+                                        <Text style={styles.avatarText}>{item.sender[0]}</Text>
                                     </View>
                                 </View>
+                                <View style={styles.rightBlock}>
+                                    <View style={styles.contentTimeBlock}>
+                                        <View style={styles.contentBlock}>
+                                            <Text style={styles.content}>{item.content}</Text>
+                                        </View>
+                                        <View style={styles.timeBlock}>
+                                            <Text style={styles.time}>{time}</Text>
+                                        </View>
+                                    </View>
+                                </View>
                             </View>
                         </View>
-                    </View>
-                )
+                    )
             }}
             />
             <View style={styles.footer}>
                 <View style={styles.keyboardBlock}>
-                    <TextInput style={styles.keyboard} placeholder={"Type some text..."} />
+                    <TextInput style={styles.keyboard} onChangeText={(text) => {setInputtedData(text)}} placeholder={"Type some text..."} />
                 </View>
                 <View style={styles.optionsBlock}>
-                    <Pressable style={styles.sendButton}>
+                    <Pressable style={styles.sendButton} 
+                               onPress={() => {console.log(inputtedData)}}
+                               disabled={(inputtedData) ? false : true}>
                         <Image style={styles.sendButtonIcon} source={require("../../../assets/chat-icons/send.png")} resizeMethod={"resize"} />
                     </Pressable>
                 </View>

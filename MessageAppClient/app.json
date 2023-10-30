@@ -32,14 +32,6 @@
       "eas": {
         "projectId": "1f9d1305-8a51-4077-ac60-6ce35fe56864"
       }
-    },
-    "plugins": [
-    [
-      "onesignal-expo-plugin",
-      {
-        "mode": "development"
-      }
-    ]
-  ]
+    }
   }
 }
