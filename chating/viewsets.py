@@ -33,9 +33,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Message.objects.filter(chat__public_id=chat_id).order_by("created_at")
 
     def create(self, request, *args, **kwargs):
-        chat = self.__get_chat(sender=request.user,
-                               receiver=get_object_or_404(User, public_id=request.data["receiver"]))
-        creation_data = {"content": request.data["content"], "chat": chat.public_id,
+        creation_data = {"content": request.data["content"], "chat": request.data["chat"],
                          "sender": request.user.public_id}
         serializer = self.get_serializer(data=creation_data)
         serializer.is_valid(raise_exception=True)

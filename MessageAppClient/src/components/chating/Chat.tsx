@@ -5,12 +5,14 @@ import { storage } from "../Storage";
 import axios from 'axios';
 import { Message } from "./MessageType";
 import { isEnabled } from "react-native/Libraries/Performance/Systrace";
+import { BaseURL } from "../AccountForm/Login/BaseURL";
 
 function Chat({route}) {
     const [messages, setMessages] = useState(null);
     const chatData = route.params["chatData"];
 
     const [inputtedData, setInputtedData] = useState("");
+    let sended = false;
 
     const strAuthData = storage.getString("auth");
     if (!strAuthData) return
@@ -27,7 +29,8 @@ function Chat({route}) {
         .catch((e) => {
             console.log(e);
         })
-    }, [])
+        sended = false;
+    }, [sended])
 
     return (
         <View style={styles.container}>
@@ -36,18 +39,21 @@ function Chat({route}) {
             data={messages}
             renderItem={({item, index}: {item: Message, index: number})=> {
                     const [date, time] = item.created_at.split(" ");
-                    const previousDate = (index !== 0) ? messages[index - 1].created_at.split(" ")[0] : null; 
+                    const previousDate = (index !== 0) && messages[index - 1].created_at.split(" ")[0]; 
+                    const nextDate = (index < messages.length - 1) && messages[index + 1].created_at.split(" ")[0];
+                    const nextSender = (index < messages.length - 1) && messages[index + 1].sender;
                     return (<View>
-                            <View style={styles.dateBlock}>
-                                <View style={styles.date}>
-                                    <Text style={styles.dateText}>{(date !== previousDate) ? date : ""}</Text>
-                                </View>    
-                            </View>
+                            {(date !== previousDate) && <View style={styles.dateBlock}>
+                                                            <View style={styles.date}>
+                                                                <Text style={styles.dateText}>{date}</Text>
+                                                            </View>
+                                                        </View>}
                             <View style={styles.messageBlock}>
                                 <View style={styles.avatarBlock}>
-                                    <View style={styles.avatar}>
-                                        <Text style={styles.avatarText}>{item.sender[0]}</Text>
-                                    </View>
+                                {(date !== nextDate || item.sender !== nextSender) && <View style={styles.avatar}>
+                                                                                        <Text style={styles.avatarText}>{item.sender[0]}</Text>
+                                                                                      </View>}
+                                    
                                 </View>
                                 <View style={styles.rightBlock}>
                                     <View style={styles.contentTimeBlock}>
@@ -70,7 +76,17 @@ function Chat({route}) {
                 </View>
                 <View style={styles.optionsBlock}>
                     <Pressable style={styles.sendButton} 
-                               onPress={() => {console.log(inputtedData)}}
+                               onPress={() => {
+                                axios.post(AppBaseURL + "message/", {
+                                    "content": inputtedData,
+                                    "chat": chatData.chat
+                                }, {
+                                    "headers": {
+                                        "Authorization": `Bearer ${authData.access}`
+                                    }
+                                }).then((response) => {response.data});
+                                sended = true;
+                               }}
                                disabled={(inputtedData) ? false : true}>
                         <Image style={styles.sendButtonIcon} source={require("../../../assets/chat-icons/send.png")} resizeMethod={"resize"} />
                     </Pressable>
@@ -87,7 +103,6 @@ const styles = StyleSheet.create({
     },
     messageBlock: {
         marginBottom: 20,
-        // borderWidth: 1,
         flexDirection: "row"
     },
     avatarBlock: {
@@ -97,7 +112,6 @@ const styles = StyleSheet.create({
     },
     avatar: {
         backgroundColor: "#D9D9D9",
-        // flex: 0.6,
         height: 35,
         borderRadius: 50,
         aspectRatio: 1,
