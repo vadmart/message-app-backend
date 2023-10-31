@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('chating', '0002_alter_message_sender'),
+        ('message_app', '0002_alter_message_sender'),
     ]
 
     operations = [

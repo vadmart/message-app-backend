@@ -4,24 +4,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
-from chating.auth.user.models import User
-from chating.models import Message, Chat
-from chating.serializers import MessageSerializer
-from chating.push import OneSignalPushNotifications
+from message_app.auth.user.models import User
+from message_app.models import Message, Chat
+from message_app.serializers import MessageSerializer, ChatSerializer
+from message_app.push import OneSignalPushNotifications
 
 
 class ChatViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "delete"]
     permission_classes = [IsAuthenticated]
-    serializer_class = MessageSerializer
-
-    def get_queryset(self):
-        chats = Chat.objects.filter(first_user=self.request.user) | Chat.objects.filter(second_user=self.request.user)
-        messages = []
-        for chat in chats:
-            messages.append(chat.message_set.first())
-        messages.sort(key=lambda item: item.created_at, reverse=True)
-        return messages
+    serializer_class = ChatSerializer
+    queryset = Chat.objects.all()
 
 
 class MessageViewSet(viewsets.ModelViewSet):

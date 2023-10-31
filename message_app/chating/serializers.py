@@ -1,7 +1,6 @@
 from rest_framework import serializers
-from chating.auth.user.models import User
-from chating.models import Message, Chat
-from datetime import datetime
+from message_app.auth.user.models import User
+from message_app.models import Message, Chat
 from django.utils.dateparse import parse_datetime
 
 
@@ -18,6 +17,22 @@ class MessageSerializer(serializers.ModelSerializer):
         rep = super().to_representation(instance)
         rep["sender"] = User.objects.get(public_id=rep["sender"]).username
         rep["created_at"] = parse_datetime(rep["created_at"]).strftime("%d.%m.%Y %H:%M")
+        return rep
+
+
+class ChatSerializer(serializers.ModelSerializer):
+    first_user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field="username", many=False)
+    second_user = serializers.SlugRelatedField(queryset=User.objects.all(), slug_field="username", many=False)
+
+    class Meta:
+        model = Chat
+        fields = ["public_id", "first_user", "second_user", "created_at"]
+        read_only_fields = ["public_id", "created_at"]
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        last_message = Message.objects.filter(chat__public_id=rep["public_id"]).first()
+        rep["last_message"] = MessageSerializer(last_message).data
         return rep
 
 # "2023-10-15T15:40:19.209225Z"

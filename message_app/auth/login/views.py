@@ -38,3 +38,7 @@ class UserVerifyView(APIView):
         if request.data.get("one_signal_app_id"):
             ChatProfile.objects.create(user=request.user, one_signal_app_id=request.data["one_signal_app_id"])
         return Response(status=status.HTTP_200_OK)
+
+
+
+# TODO: make field "is_verified" and permission.

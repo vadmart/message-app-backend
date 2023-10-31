@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('edited_at', models.DateTimeField(auto_now=True)),
                 ('content', models.TextField()),
-                ('chat', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='chating.chat')),
+                ('chat', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='message_app.chat')),
                 ('sender', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={

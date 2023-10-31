@@ -5,7 +5,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 from rest_framework_simplejwt.tokens import UntypedToken
-from chating.auth.user.models import User
+from message_app.auth.user.models import User
 
 from rest_framework_simplejwt.serializers import TokenVerifySerializer
 from django.conf import settings
