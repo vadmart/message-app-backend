@@ -41,9 +41,10 @@ INSTALLED_APPS = [
     'django_extensions',
     'rest_framework_simplejwt',
     'phonenumber_field',
-    'chating',
-    'chating.auth.user',
-    'chating.auth',
+    'message_app',
+    'message_app.chating',
+    'message_app.auth',
+    'message_app.auth.user',
     'corsheaders',
 ]
 
@@ -80,6 +81,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'messenger.wsgi.application'
 ASGI_APPLICATION = 'messenger.asgi.application'
 
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
@@ -111,6 +114,8 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
@@ -152,14 +157,14 @@ CACHES = {
 }
 
 SIMPLE_JWT = {
-    "TOKEN_OBTAIN_SERIALIZER": "chating.auth.login.serializers.TokenSerializer",
-    "TOKEN_VERIFY_SERIALIZER": "chating.auth.verify.serializers.UserTokenVerifySerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "message_app.auth.login.serializers.TokenSerializer",
+    "TOKEN_VERIFY_SERIALIZER": "message_app.auth.token_verify.serializers.UserTokenVerifySerializer",
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(weeks=1),
     "USER_ID_FIELD": "public_id"
 }
 
-AUTHENTICATION_BACKENDS = ['chating.auth.user.backends.MessengerModelBackend']
+AUTHENTICATION_BACKENDS = ['message_app.auth.user.backends.MessengerModelBackend']
 
 REST_FRAMEWORK = {
         'DEFAULT_AUTHENTICATION_CLASSES': (

@@ -1,4 +1,4 @@
-from chating.auth.user.models import User
+from message_app.auth.user.models import User
 from rest_framework import serializers
 
 

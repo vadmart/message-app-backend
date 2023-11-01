@@ -1,7 +1,7 @@
 from django.db import models
 from phonenumber_field import modelfields
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from chating.abstract.models import AbstractModel, AbstractManager
+from message_app.abstract.models import AbstractModel, AbstractManager
 from pyotp import random_base32
 from django.utils.translation import gettext_lazy as _
 
@@ -47,7 +47,6 @@ class User(AbstractBaseUser, AbstractModel):
 
     is_active = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
-    is_verified = models.BooleanField(default=False)
 
     objects = UserManager()
     USERNAME_FIELD = "username"

@@ -1,13 +1,11 @@
-from uuid import UUID
-from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
 from message_app.auth.user.models import User
-from message_app.models import Message, Chat
-from message_app.serializers import MessageSerializer, ChatSerializer
-from message_app.push import OneSignalPushNotifications
+from message_app.chating.models import Message, Chat
+from message_app.chating.serializers import MessageSerializer, ChatSerializer
+from message_app.chating.push import OneSignalPushNotifications
 
 
 class ChatViewSet(viewsets.ModelViewSet):
@@ -20,6 +18,7 @@ class ChatViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     http_method_names = ["get", "post", "patch", "put", "delete"]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         chat_id = self.request.query_params["chat_id"]

@@ -34,12 +34,10 @@ const LoginPageOne = ({ navigation }) => {
         }
         axios.post(BaseURL, {
             "username": username,
-            "phone_number": "+380" + phoneNumber,
-            "onesignal_app_id": OneSignal.User.pushSubscription.getPushSubscriptionId()
+            "phone_number": "+380" + phoneNumber
         })
         .then((response) => {
-            navigation.navigate("LoginPageTwo");
-            storage.set("auth", JSON.stringify(response.data));
+            navigation.navigate("LoginPageTwo", {username: username, phoneNumber: "+380" + phoneNumber});
             console.log(response.data)
         })
         .catch((e) => {

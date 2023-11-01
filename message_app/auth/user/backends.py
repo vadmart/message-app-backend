@@ -1,5 +1,5 @@
 from django.contrib.auth.backends import ModelBackend, UserModel
-from chating.auth.user.models import User
+from message_app.auth.user.models import User
 import pyotp
 
 

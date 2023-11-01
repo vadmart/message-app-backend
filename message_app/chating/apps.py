@@ -3,4 +3,5 @@ from django.apps import AppConfig
 
 class ChatingConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'message_app'
+    name = 'message_app.chating'
+    label = 'message_app_chating'

@@ -11,10 +11,9 @@ import os
 
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
-from rest_framework import routers
 
-from chating import urls
-from chating.middlewares import WebsocketJWTAuthMiddleware
+from message_app import urls
+from message_app.chating.middlewares import WebsocketJWTAuthMiddleware
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'messenger.settings')
 

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from message_app.auth.user.models import User
-from message_app.models import Message, Chat
+from message_app.chating.models import Message, Chat
 from django.utils.dateparse import parse_datetime
 
 

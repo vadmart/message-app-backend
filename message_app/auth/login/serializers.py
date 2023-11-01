@@ -1,6 +1,6 @@
 from rest_framework_simplejwt import exceptions
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
-from rest_framework.serializers import Serializer
+from message_app.auth.user.serializers import UserSerializer
 from phonenumber_field import serializerfields
 from rest_framework_simplejwt.tokens import RefreshToken, Token
 from rest_framework_simplejwt.settings import api_settings
@@ -35,7 +35,7 @@ class AbstractTokenSerializer(TokenObtainSerializer):
                 self.error_messages["no_active_account"],
                 "no_active_account",
             )
-        return {"user": self.user}
+        return {"user": UserSerializer(self.user).data}
 
 
 class TokenSerializer(AbstractTokenSerializer):

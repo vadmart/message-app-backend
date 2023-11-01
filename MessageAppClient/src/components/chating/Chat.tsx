@@ -10,15 +10,15 @@ import { BaseURL } from "../AccountForm/Login/BaseURL";
 function Chat({route}) {
     const [messages, setMessages] = useState(null);
     const chatData = route.params["chatData"];
-
     const [inputtedData, setInputtedData] = useState("");
+
     let sended = false;
 
     const strAuthData = storage.getString("auth");
     if (!strAuthData) return
     const authData = JSON.parse(strAuthData);
     useEffect(() => {
-        axios.get(AppBaseURL + `message/?chat_id=${chatData["chat"]}`, {
+        axios.get(AppBaseURL + `message/?chat_id=${chatData.last_message.chat}`, {
             headers: {
                 Authorization: `Bearer ${authData.access}`
             }
@@ -79,7 +79,7 @@ function Chat({route}) {
                                onPress={() => {
                                 axios.post(AppBaseURL + "message/", {
                                     "content": inputtedData,
-                                    "chat": chatData.chat
+                                    "chat": chatData.last_message.chat
                                 }, {
                                     "headers": {
                                         "Authorization": `Bearer ${authData.access}`

@@ -3,7 +3,7 @@ from copy import deepcopy
 from typing import Any
 from collections.abc import Iterable
 import requests
-from message_app.models import Message
+from message_app.chating.models import Message
 
 
 class OneSignalPushNotifications:

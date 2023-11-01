@@ -14,9 +14,9 @@ router.register("auth/register", RegisterViewSet, basename="auth-register")
 
 urlpatterns = [
     path("auth/login/", UserAuthView.as_view(), name="auth-login"),
-    path("auth/login/token_verify/", UserVerifyView.as_view(), name="auth-login-token_verify"),
+    path("auth/login/verify/", UserVerifyView.as_view(), name="auth-login-verify"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="auth-refresh"),
-    path("auth/token/token_verify/", TokenVerifyView.as_view(), name="auth-token-token_verify"),
+    path("auth/token/verify/", TokenVerifyView.as_view(), name="auth-token-verify"),
     *router.urls
 ]
 

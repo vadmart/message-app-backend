@@ -10,20 +10,18 @@ import { OneSignal } from "react-native-onesignal";
 
 
 const PageTwo = ({ route, navigation }) => {
+    const {username, phoneNumber} = route.params
     function handleForm() {
         const otpCode = firstValue + secondValue + thirdValue + fourthValue + fifthValue + sixthValue;
-        const accessToken = JSON.parse(storage.getString("auth")).access || null;
         console.log(otpCode);
         axios.post(BaseURL + "verify/", {
+            "username": username,
+            "phone_number": phoneNumber,
             "otp_code": otpCode,
-            "one_signal_app_id": OneSignal.User.pushSubscription.getPushSubscriptionId(),
-        }, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
         })
         .then((response) => {
-            console.log("We are logged in");
+            storage.set("auth", JSON.stringify(response.data));
+            OneSignal.login(response.data.user.public_id);
             navigation.navigate("MainScreen");
         })
         .catch((e) => {

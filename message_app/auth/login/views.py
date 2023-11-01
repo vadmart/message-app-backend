@@ -2,15 +2,17 @@ import os
 
 import pyotp
 from django.contrib.auth.models import AnonymousUser
+from rest_framework.generics import get_object_or_404
+from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from chating.auth.user.models import ChatProfile
+from message_app.auth.user.models import ChatProfile, User
 
-from chating.auth.login.serializers import TokenSerializer
+from message_app.auth.login.serializers import TokenSerializer
 
 otp = pyotp.TOTP(os.environ.get("OTP_HMAC_KEY"))
 
@@ -24,21 +26,20 @@ class UserAuthView(TokenObtainPairView):
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
             raise InvalidToken(e.args[0])
-        del serializer.validated_data["user"]
+        request.session["auth"] = serializer.validated_data
         print(otp.now())
-        return Response(data=serializer.validated_data, status=status.HTTP_200_OK)
+        return Response(data={"status": "pending"}, status=status.HTTP_200_OK)
 
 
 class UserVerifyView(APIView):
     def post(self, request):
-        if isinstance(request.user, AnonymousUser):
-            return Response(data={"data": "User hasn't been authorized"}, status=status.HTTP_401_UNAUTHORIZED)
+        if not request.session.get("auth"):
+            return Response(data={"detail": "User is not verified!"}, status=status.HTTP_400_BAD_REQUEST)
+        auth_data = request.session["auth"]
         if not otp.verify(otp=request.data.get("otp_code")):
             return Response(data={"detail": "OTP code is invalid or expired"}, status=status.HTTP_400_BAD_REQUEST)
         if request.data.get("one_signal_app_id"):
             ChatProfile.objects.create(user=request.user, one_signal_app_id=request.data["one_signal_app_id"])
-        return Response(status=status.HTTP_200_OK)
-
-
+        return Response(data=auth_data, status=status.HTTP_200_OK)
 
 # TODO: make field "is_verified" and permission.

@@ -34,12 +34,11 @@ function getNewChatsByChangingContent(event: NotificationWillDisplayEvent, chats
     return chats
 }
 
-function Chats({route, navigation, props}) {
-
-    console.log(props);
+function Chats({route, navigation}) {
 
     const [chats, setChats] = useState<Message[] | null>(null);
-    console.log(route)
+    const user = JSON.parse(storage.getString("auth") || "{}").user.username;
+    console.log(user)
 
     useEffect(() => {
         const auth: Auth = JSON.parse(storage.getString("auth"));
@@ -51,6 +50,7 @@ function Chats({route, navigation, props}) {
         })
         .then((response) => {
             setChats(response.data);
+            console.log(response.data)
         })
     }, [])
 
@@ -75,8 +75,8 @@ function Chats({route, navigation, props}) {
                         }
                             }>
                             <View style={styles.senderTextBlock}>
-                                <Text style={styles.messageSender}>{item.sender}</Text>
-                                <Text style={styles.messageText}>{item.content}</Text>
+                                <Text style={styles.messageSender}>{(item.first_user == user) ? item.second_user : item.first_user}</Text>
+                                <Text style={styles.messageText}>{item.last_message.content}</Text>
                             </View>    
                             <View style={styles.dateBlock}>
                                 <Text style={styles.messageDate}>{item.created_at}</Text>
