@@ -1,24 +1,58 @@
-import React, { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState, useRef, memo } from "react"
 import { View, Text, StyleSheet, FlatList, TextInput, Image, Pressable } from "react-native";
 import { AppBaseURL } from "../../AppBaseURL";
 import { storage } from "../Storage";
 import axios from 'axios';
-import { Message } from "./MessageType";
-import { isEnabled } from "react-native/Libraries/Performance/Systrace";
-import { BaseURL } from "../AccountForm/Login/BaseURL";
+import { Message, ChatInterface } from "./MessageType";
+
+
+const MessageItem = memo(({item, index, messages}: {item: Message, index: number, messages: readonly Message[]}) => {
+    console.log("rendering MessageItem");
+    const [currentDate, currentTime] = item.created_at.split(" ");
+    const previousDate = (index !== 0) && messages[index - 1].created_at.split(" ")[0]; 
+    const nextDate = (index < messages.length - 1) && messages[index + 1].created_at.split(" ")[0];
+    const nextSender = (index < messages.length - 1) && messages[index + 1].sender;
+    console.log(currentDate);
+    return (<View>
+            {(currentDate !== previousDate) && <View style={styles.dateBlock}>
+                                            <View style={styles.date}>
+                                                <Text style={styles.dateText}>{currentDate}</Text>
+                                            </View>
+                                        </View>}
+            <View style={styles.messageBlock}>
+                <View style={styles.avatarBlock}>
+                {(currentDate !== nextDate || item.sender !== nextSender) && <View style={styles.avatar}>
+                                                                        <Text style={styles.avatarText}>{item.sender[0]}</Text>
+                                                                      </View>}
+                    
+                </View>
+                <View style={styles.rightBlock}>
+                    <View style={styles.contentTimeBlock}>
+                        <View style={styles.contentBlock}>
+                            <Text style={styles.content}>{item.content}</Text>
+                        </View>
+                        <View style={styles.timeBlock}>
+                            <Text style={styles.time}>{currentTime}</Text>
+                        </View>
+                    </View>
+                </View>
+            </View>
+        </View>
+    )
+})
 
 function Chat({route}) {
-    const [messages, setMessages] = useState(null);
-    const chatData = route.params["chatData"];
+    console.log("rendering Chat");
+    const authData = JSON.parse(storage.getString("auth") || "");
+    if (authData.length == 0) return;
+
+    const inputFieldRef = useRef(null);
+    const [messages, setMessages] = useState<Message[]>(null);
     const [inputtedData, setInputtedData] = useState("");
+    const chatData: ChatInterface = route.params["chatData"];
 
-    let sended = false;
-
-    const strAuthData = storage.getString("auth");
-    if (!strAuthData) return
-    const authData = JSON.parse(strAuthData);
     useEffect(() => {
-        axios.get(AppBaseURL + `message/?chat_id=${chatData.last_message.chat}`, {
+        axios.get(AppBaseURL + `message/?chat_id=${chatData.public_id}`, {
             headers: {
                 Authorization: `Bearer ${authData.access}`
             }
@@ -29,64 +63,46 @@ function Chat({route}) {
         .catch((e) => {
             console.log(e);
         })
-        sended = false;
-    }, [sended])
+    }, [])
 
+    function createMessage() {
+        axios.post(AppBaseURL + "message/", {
+            "content": inputtedData,
+            "chat": chatData.last_message.chat
+        }, {
+            "headers": {
+                "Authorization": `Bearer ${authData.access}`
+            }
+        }).then((response) => {
+            console.log(response.data);
+            inputFieldRef.current.clear();
+        })
+        .catch((reason) => {
+            console.error(reason);
+        })
+    }
+
+    
     return (
         <View style={styles.container}>
             <FlatList
             style={{paddingTop: 10}} 
             data={messages}
-            renderItem={({item, index}: {item: Message, index: number})=> {
-                    const [date, time] = item.created_at.split(" ");
-                    const previousDate = (index !== 0) && messages[index - 1].created_at.split(" ")[0]; 
-                    const nextDate = (index < messages.length - 1) && messages[index + 1].created_at.split(" ")[0];
-                    const nextSender = (index < messages.length - 1) && messages[index + 1].sender;
-                    return (<View>
-                            {(date !== previousDate) && <View style={styles.dateBlock}>
-                                                            <View style={styles.date}>
-                                                                <Text style={styles.dateText}>{date}</Text>
-                                                            </View>
-                                                        </View>}
-                            <View style={styles.messageBlock}>
-                                <View style={styles.avatarBlock}>
-                                {(date !== nextDate || item.sender !== nextSender) && <View style={styles.avatar}>
-                                                                                        <Text style={styles.avatarText}>{item.sender[0]}</Text>
-                                                                                      </View>}
-                                    
-                                </View>
-                                <View style={styles.rightBlock}>
-                                    <View style={styles.contentTimeBlock}>
-                                        <View style={styles.contentBlock}>
-                                            <Text style={styles.content}>{item.content}</Text>
-                                        </View>
-                                        <View style={styles.timeBlock}>
-                                            <Text style={styles.time}>{time}</Text>
-                                        </View>
-                                    </View>
-                                </View>
-                            </View>
-                        </View>
-                    )
+            renderItem={(props) => {
+                return <MessageItem item={props.item} index={props.index} messages={messages}/>
             }}
             />
             <View style={styles.footer}>
                 <View style={styles.keyboardBlock}>
-                    <TextInput style={styles.keyboard} onChangeText={(text) => {setInputtedData(text)}} placeholder={"Type some text..."} />
+                    <TextInput style={styles.keyboard} 
+                               ref={inputFieldRef}
+                               onChangeText={(text) => {setInputtedData(text)}} 
+                               placeholder={"Type some text..."} 
+                    />
                 </View>
                 <View style={styles.optionsBlock}>
                     <Pressable style={styles.sendButton} 
-                               onPress={() => {
-                                axios.post(AppBaseURL + "message/", {
-                                    "content": inputtedData,
-                                    "chat": chatData.last_message.chat
-                                }, {
-                                    "headers": {
-                                        "Authorization": `Bearer ${authData.access}`
-                                    }
-                                }).then((response) => {response.data});
-                                sended = true;
-                               }}
+                               onPress={createMessage}
                                disabled={(inputtedData) ? false : true}>
                         <Image style={styles.sendButtonIcon} source={require("../../../assets/chat-icons/send.png")} resizeMethod={"resize"} />
                     </Pressable>
@@ -122,7 +138,7 @@ const styles = StyleSheet.create({
         fontSize: 20
     },
     rightBlock: {
-        flex: 0.85,
+        flex: 0.8,
         alignItems: "flex-start"
     },
     contentTimeBlock: {

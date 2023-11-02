@@ -35,15 +35,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def __send_push_notification(self, message: Message):
-        receiver = message.chat.second_user if self.request.user == message.chat.first_user else message.chat.first_user
         push_notification = OneSignalPushNotifications(
-            subscription_ids=list(receiver.chatprofile_set.all().values_list("one_signal_app_id", flat=True)),
+            subscription_ids=[str(message.chat.first_user.public_id), str(message.chat.second_user.public_id)],
             message=message)
         push_notification.send_notification()
-
-    def __get_chat(self, sender: User, receiver: User) -> Chat:
-        chats = (Chat.objects.filter(first_user=sender, second_user=receiver) |
-                 Chat.objects.filter(first_user=receiver, second_user=sender))
-        if chats:
-            return chats[0]
-        return Chat.objects.create(first_user=sender, second_user=receiver)

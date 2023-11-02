@@ -8,3 +8,11 @@ interface MessageInfo {
 export interface Message extends MessageInfo {
     content?: string,
 };
+
+export interface ChatInterface {
+    created_at: string,
+    first_user: string,
+    second_user: string,
+    last_message: Message,
+    public_id: string
+}
