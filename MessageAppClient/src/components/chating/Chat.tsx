@@ -4,6 +4,7 @@ import { AppBaseURL } from "../../AppBaseURL";
 import { storage } from "../Storage";
 import axios from 'axios';
 import { Message, ChatInterface } from "./MessageType";
+import { ChatKeyboard } from "./ChatKeyboard";
 
 
 const MessageItem = memo(({item, index, messages}: {item: Message, index: number, messages: readonly Message[]}) => {
@@ -46,9 +47,8 @@ function Chat({route}) {
     const authData = JSON.parse(storage.getString("auth") || "");
     if (authData.length == 0) return;
 
-    const inputFieldRef = useRef(null);
+    
     const [messages, setMessages] = useState<Message[]>(null);
-    const [inputtedData, setInputtedData] = useState("");
     const chatData: ChatInterface = route.params["chatData"];
 
     useEffect(() => {
@@ -65,22 +65,7 @@ function Chat({route}) {
         })
     }, [])
 
-    function createMessage() {
-        axios.post(AppBaseURL + "message/", {
-            "content": inputtedData,
-            "chat": chatData.last_message.chat
-        }, {
-            "headers": {
-                "Authorization": `Bearer ${authData.access}`
-            }
-        }).then((response) => {
-            console.log(response.data);
-            inputFieldRef.current.clear();
-        })
-        .catch((reason) => {
-            console.error(reason);
-        })
-    }
+    
 
     
     return (
@@ -93,20 +78,7 @@ function Chat({route}) {
             }}
             />
             <View style={styles.footer}>
-                <View style={styles.keyboardBlock}>
-                    <TextInput style={styles.keyboard} 
-                               ref={inputFieldRef}
-                               onChangeText={(text) => {setInputtedData(text)}} 
-                               placeholder={"Type some text..."} 
-                    />
-                </View>
-                <View style={styles.optionsBlock}>
-                    <Pressable style={styles.sendButton} 
-                               onPress={createMessage}
-                               disabled={(inputtedData) ? false : true}>
-                        <Image style={styles.sendButtonIcon} source={require("../../../assets/chat-icons/send.png")} resizeMethod={"resize"} />
-                    </Pressable>
-                </View>
+                <ChatKeyboard chatData={chatData} authData={authData} />
             </View>
         </View>
     )
@@ -173,27 +145,5 @@ const styles = StyleSheet.create({
         height: 45,
         flexDirection: "row"
     },
-    keyboardBlock: {
-        flex: 0.9,
-        justifyContent: "center",
-        paddingLeft: 15
-    },
-    keyboard: {
-        fontSize: 18
-    },
-    optionsBlock: {
-        flex: 0.1,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingRight: 5
-    },
-    sendButton: {
-        objectFit: "fill",
-        aspectRatio: 1
-    },
-    sendButtonIcon: {
-        height: "85%",
-        width: "85%"
-    }
 })
 export default Chat;
