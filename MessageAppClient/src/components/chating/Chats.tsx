@@ -6,10 +6,10 @@ import { storage } from "../Storage";
 import { Auth } from "../../Auth";
 import { NotificationWillDisplayEvent, OneSignal } from "react-native-onesignal";
 import { ChatInterface, isAMessage, isAChatArray } from "./MessageType";
-import { sortChats } from "./helpers/chatDatetime";
+import { sortChats, toReadableDateTime } from "./helpers/chatDatetime";
 
 
-function setNewChatMessages(event: NotificationWillDisplayEvent, chats: ChatInterface[]) {
+const setNewChatMessages = (event: NotificationWillDisplayEvent, chats: ChatInterface[]) => {
     if (!isAMessage(event.notification.additionalData)) return
     const message = event.notification.additionalData;
     message.content = event.notification.body;
@@ -25,7 +25,7 @@ function setNewChatMessages(event: NotificationWillDisplayEvent, chats: ChatInte
     console.log(chats);
 }
 
-function Chats({route, navigation}) {
+const Chats = ({route, navigation}) => {
 
     const [chats, setChats] = useState<ChatInterface[] | null>(null);
     const user = JSON.parse(storage.getString("auth") || "{}").user.username;
@@ -72,8 +72,8 @@ function Chats({route, navigation}) {
                                 <Text style={styles.messageSender}>{(item.first_user == user) ? item.second_user : item.first_user}</Text>
                                 <Text style={styles.messageText}>{item.last_message.content}</Text>
                             </View>    
-                            <View style={styles.dateBlock}>
-                                <Text style={styles.messageDate}>{item.last_message.created_at}</Text>
+                            <View style={styles.dateTimeBlock}>
+                                <Text style={styles.messageDateTime}>{toReadableDateTime(new Date(item.last_message.created_at))}</Text>
                             </View>
                         </Pressable>
                     )
@@ -107,11 +107,14 @@ const styles = StyleSheet.create({
     messageText: {
         fontSize: 20,
     },
-    dateBlock: {
+    dateTimeBlock: {
         flex: 0.2,
         justifyContent: "center",
+        alignItems: "center"
     },
-    messageDate: {},
+    messageDateTime: {
+        textAlign: "center"
+    },
     messageData: {
         display: "none"
     },

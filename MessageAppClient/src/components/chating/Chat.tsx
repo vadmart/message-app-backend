@@ -38,7 +38,7 @@ const Chat = ({route}) => {
         console.log("Received message notification...")
         const message = e.notification.additionalData;
         message.content = e.notification.body;
-        setMessages(() => [...messages]);
+        setMessages(() => [...messages, message]);
         console.log(messages);
     }
     

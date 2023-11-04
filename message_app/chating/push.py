@@ -28,8 +28,8 @@ class OneSignalPushNotifications:
         current_payload["headings"] = {"en": self.message.sender.username}
         current_payload["target_channel"] = "push"
         current_payload["data"] = {"chat": str(self.message.chat.public_id),
-                                   "created_at": self.message.created_at.strftime("%d.%m.%Y %H:%M"),
+                                   "created_at": str(self.message.created_at),
                                    "sender": self.message.sender.username,
-                                   "edited_at": self.message.edited_at.strftime("%d.%m.%Y %H:%M")}
+                                   "edited_at": str(self.message.edited_at)}
         res = requests.post(self.BASE_URL, json=current_payload, headers=self.headers)
         print(res.content)

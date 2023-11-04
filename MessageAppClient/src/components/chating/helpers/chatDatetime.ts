@@ -22,5 +22,9 @@ export const toReadableTime = (dateTime: Date): string => {
 }
 
 export const toReadableDate = (dateTime: Date): string => {
-    return `${dateTime.getDate()} ${numToMonth[dateTime.getMonth() - 1]}`
+    return `${dateTime.getDate()} ${numToMonth[dateTime.getMonth()]}`
+}
+
+export const toReadableDateTime = (dateTime: Date): string => {
+    return `${dateTime.getDate().toString().padStart(2, "0")}.${dateTime.getMonth().toString().padStart(2, "0")}.${dateTime.getFullYear()} ${toReadableTime(dateTime)}`
 }
