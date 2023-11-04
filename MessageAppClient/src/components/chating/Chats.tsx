@@ -1,23 +1,15 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { View, StyleSheet, FlatList, Pressable, Text } from "react-native";
 import {AppBaseURL} from "../../AppBaseURL";
 import { storage } from "../Storage";
 import { Auth } from "../../Auth";
 import { NotificationWillDisplayEvent, OneSignal } from "react-native-onesignal";
-import { ChatInterface, Message } from "./MessageType";
+import { ChatInterface, isAMessage, isAChatArray } from "./MessageType";
+import { sortChats } from "./helpers/chatDatetime";
 
 
-// function isMessageInfo(obj: any): obj is MessageInfo {
-//     return "chat" in obj && "sender" in obj && "created_at" in obj && "edited_at" in obj
-// }
-
-function isAMessage(obj: any): obj is Message {
-    return "chat" in obj && "sender" in obj && "created_at" in obj && "edited_at" in obj
-}
-
-
-function getNewChatsByChangingContent(event: NotificationWillDisplayEvent, chats: ChatInterface[]): ChatInterface[] {
+function setNewChatMessages(event: NotificationWillDisplayEvent, chats: ChatInterface[]) {
     if (!isAMessage(event.notification.additionalData)) return
     const message = event.notification.additionalData;
     message.content = event.notification.body;
@@ -31,7 +23,6 @@ function getNewChatsByChangingContent(event: NotificationWillDisplayEvent, chats
     }
     console.log("Current chats: ");
     console.log(chats);
-    return chats
 }
 
 function Chats({route, navigation}) {
@@ -49,8 +40,10 @@ function Chats({route, navigation}) {
             }
         })
         .then((response) => {
-            setChats(response.data);
-            console.log(response.data)
+            if (!isAChatArray(response.data)) return
+            const sortedChats = response.data.sort(sortChats);
+            setChats(sortedChats);
+            console.log(sortedChats);
         })
         .catch((e) => console.log(e))
     }, [])
@@ -58,8 +51,8 @@ function Chats({route, navigation}) {
     function newChats(e: NotificationWillDisplayEvent) {
         e.preventDefault();
         if (!chats) return null;
-        const newChats = getNewChatsByChangingContent(e, chats);
-        setChats(() => [...newChats]);
+        setNewChatMessages(e, chats);
+        setChats(() => [...chats]);
     }
 
     OneSignal.Notifications.addEventListener("foregroundWillDisplay", newChats);

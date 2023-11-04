@@ -10,7 +10,7 @@ export function ChatKeyboard({chatData, authData}) {
     function createMessage() {
         axios.post(AppBaseURL + "message/", {
             "content": inputtedData,
-            "chat": chatData.last_message.chat
+            "chat": chatData.public_id
         }, {
             "headers": {
                 "Authorization": `Bearer ${authData.access}`

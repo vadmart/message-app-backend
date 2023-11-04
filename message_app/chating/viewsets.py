@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from message_app.chating.models import Message, Chat
 from message_app.chating.serializers import MessageSerializer, ChatSerializer
 from message_app.chating.push import OneSignalPushNotifications
-from django.db.models import Q
+from django.db.models import Q, Count, Max
 
 
 class ChatViewSet(viewsets.ModelViewSet):
@@ -14,8 +14,7 @@ class ChatViewSet(viewsets.ModelViewSet):
     serializer_class = ChatSerializer
 
     def get_queryset(self):
-        qs = Chat.objects.filter(Q(first_user=self.request.user) | Q(second_user=self.request.user))
-        return sorted(qs, key=lambda chat: chat.message_set.first().created_at, reverse=True)
+        return Chat.objects.filter(Q(first_user=self.request.user) | Q(second_user=self.request.user))
 
 
 class MessageViewSet(viewsets.ModelViewSet):

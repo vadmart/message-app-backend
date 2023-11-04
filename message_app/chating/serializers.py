@@ -16,7 +16,7 @@ class MessageSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         rep["sender"] = User.objects.get(public_id=rep["sender"]).username
-        rep["created_at"] = parse_datetime(rep["created_at"]).strftime("%d.%m.%Y %H:%M")
+        # rep["created_at"] = parse_datetime(rep["created_at"]).strftime("%d.%m.%Y %H:%M")
         return rep
 
 
