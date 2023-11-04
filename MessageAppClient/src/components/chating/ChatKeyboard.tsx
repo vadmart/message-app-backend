@@ -25,20 +25,20 @@ export function ChatKeyboard({chatData, authData}) {
     }
     return (
         <>
-        <View style={styles.keyboardBlock}>
-            <TextInput style={styles.keyboard} 
-                        ref={inputFieldRef}
-                        onChangeText={(text) => {setInputtedData(text)}} 
-                        placeholder={"Type some text..."} 
-            />
-        </View>
-                <View style={styles.optionsBlock}>
-                    <Pressable style={styles.sendButton} 
-                               onPress={createMessage}
-                               disabled={(inputtedData) ? false : true}>
-                <Image style={styles.sendButtonIcon} source={require("../../../assets/chat-icons/send.png")} resizeMethod={"resize"} />
-            </Pressable>
-        </View>
+            <View style={styles.keyboardBlock}>
+                <TextInput style={styles.keyboard} 
+                            ref={inputFieldRef}
+                            onChangeText={(text) => {setInputtedData(text)}} 
+                            placeholder={"Type some text..."} 
+                />
+            </View>
+                    <View style={styles.optionsBlock}>
+                        <Pressable style={styles.sendButton} 
+                                onPress={createMessage}
+                                disabled={(inputtedData) ? false : true}>
+                    <Image style={styles.sendButtonIcon} source={require("../../../assets/chat-icons/send.png")} resizeMethod={"resize"} />
+                </Pressable>
+            </View>
         </>
     )
 }

@@ -10,7 +10,7 @@ class OneSignalPushNotifications:
     BASE_URL = "https://onesignal.com/api/v1/notifications/"
 
     headers: dict[str, str] = {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json; charset=utf-8",
         "Authorization": f"Basic {os.environ.get('ONESIGNAL_REST_API_KEY')}"
     }
     payload: dict[str, Any] = {
@@ -23,12 +23,13 @@ class OneSignalPushNotifications:
 
     def send_notification(self) -> None:
         current_payload = deepcopy(self.payload)
-        current_payload["include_subscription_ids"] = self.subscription_ids
+        current_payload["include_aliases"] = {"external_id": self.subscription_ids}
         current_payload["contents"] = {"en": f"{self.message.content}"}
         current_payload["headings"] = {"en": self.message.sender.username}
+        current_payload["target_channel"] = "push"
         current_payload["data"] = {"chat": str(self.message.chat.public_id),
                                    "created_at": self.message.created_at.strftime("%d.%m.%Y %H:%M"),
                                    "sender": self.message.sender.username,
                                    "edited_at": self.message.edited_at.strftime("%d.%m.%Y %H:%M")}
         res = requests.post(self.BASE_URL, json=current_payload, headers=self.headers)
-        print(res)
+        print(res.content)

@@ -8,6 +8,8 @@ import FormButton from "../FormButton";
 import FormContainer from "../../FormContainer";
 import { OneSignal } from "react-native-onesignal";
 
+const ONESIGNAL_PATCH_SUBSCRIPTION_ALIAS_URL = "https://onesignal.com/api/v1/apps/app_id/subscriptions/subscription_id/owner";
+
 
 const PageTwo = ({ route, navigation }) => {
     const {username, phoneNumber} = route.params
@@ -22,6 +24,19 @@ const PageTwo = ({ route, navigation }) => {
         .then((response) => {
             storage.set("auth", JSON.stringify(response.data));
             OneSignal.login(response.data.user.public_id);
+            console.log(response.data.user.public_id);    
+            // axios.patch(ONESIGNAL_PATCH_SUBSCRIPTION_ALIAS_URL.replace("app_id", "f3536252-f32f-4823-9115-18b1597b3b1a")
+            // .replace("subscription_id", OneSignal.User.pushSubscription.getPushSubscriptionId()), {
+            //     "identity": {
+            //         "external_id": response.data.user.public_id
+            //     }
+            // }, {
+            //     headers: {
+            //         "Accept": "application/json",
+            //         "Content-Type": "application/json",
+            //     }
+            // }).then((response) => console.log(response))
+            // .catch((err) => console.log(err.response.data))
             navigation.navigate("MainScreen");
         })
         .catch((e) => {
@@ -55,7 +70,7 @@ const PageTwo = ({ route, navigation }) => {
     const [labelText, setLabelText] = useState("");
     const [isFormHandled, setIsFormHandled] = useState(false);
 
-    const fields = {};
+    const fields = {first: null, second: null, third: null, fourth: null, fifth: null, sixth: null};
 
     if (sixthValue && !isFormHandled) {
         handleForm();

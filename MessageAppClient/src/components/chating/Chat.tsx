@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useRef, memo } from "react"
-import { View, Text, StyleSheet, FlatList, TextInput, Image, Pressable } from "react-native";
+import React, { useEffect, useState } from "react"
+import { NotificationWillDisplayEvent, OneSignal } from "react-native-onesignal";
+import { View, Text, StyleSheet, FlatList } from "react-native";
 import { AppBaseURL } from "../../AppBaseURL";
 import { storage } from "../Storage";
 import axios from 'axios';
-import { Message, ChatInterface } from "./MessageType";
+import { Message, ChatInterface, isAMessage } from "./MessageType";
 import { ChatKeyboard } from "./ChatKeyboard";
 
-
-const MessageItem = memo(({item, index, messages}: {item: Message, index: number, messages: readonly Message[]}) => {
+function MessageItem ({item, index, messages}: {item: Message, index: number, messages: readonly Message[]}) {
     console.log("rendering MessageItem");
     const [currentDate, currentTime] = item.created_at.split(" ");
     const previousDate = (index !== 0) && messages[index - 1].created_at.split(" ")[0]; 
@@ -40,14 +40,20 @@ const MessageItem = memo(({item, index, messages}: {item: Message, index: number
             </View>
         </View>
     )
-})
+}
+
+
+function showMessage(event: NotificationWillDisplayEvent, messages: Message[], setMessages) {
+    if (!isAMessage(event.notification.additionalData)) return
+    const newMessage = event.notification.additionalData;
+    newMessage.content = event.notification.body;
+
+}
 
 function Chat({route}) {
     console.log("rendering Chat");
-    const authData = JSON.parse(storage.getString("auth") || "");
+    const authData = JSON.parse(storage.getString("auth") || "{}");
     if (authData.length == 0) return;
-
-    
     const [messages, setMessages] = useState<Message[]>(null);
     const chatData: ChatInterface = route.params["chatData"];
 
@@ -65,9 +71,13 @@ function Chat({route}) {
         })
     }, [])
 
+    const showMessage = (e: NotificationWillDisplayEvent) => {
+        if (!isAMessage(e.notification.additionalData)) return
+        console.log(e);
+    }
     
+    OneSignal.Notifications.addEventListener("foregroundWillDisplay", showMessage);
 
-    
     return (
         <View style={styles.container}>
             <FlatList

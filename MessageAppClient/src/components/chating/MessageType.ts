@@ -16,3 +16,7 @@ export interface ChatInterface {
     last_message: Message,
     public_id: string
 }
+
+export const isAMessage = (obj: any): obj is Message => {
+    return "chat" in obj && "sender" in obj && "created_at" in obj && "edited_at" in obj
+}
