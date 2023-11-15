@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { View, StyleSheet, FlatList, Pressable, Text } from "react-native";
-import {AppBaseURL} from "../../AppBaseURL";
-import { storage } from "../Storage";
-import { Auth } from "../../Auth";
+import { View, StyleSheet, FlatList, Pressable, Text, TextInput, Image } from "react-native";
+import {AppBaseURL} from "@app/config";
+import { storage } from "@app/components/Storage";
+import { Auth } from "@app/Auth";
 import { NotificationWillDisplayEvent, OneSignal } from "react-native-onesignal";
-import { ChatInterface, isAMessage, isAChatArray } from "./MessageType";
-import { sortChats, toReadableDateTime } from "./helpers/chatDatetime";
+import { ChatInterface, isAMessage, isAChatArray } from "@app/components/chating/MessageType";
+import { sortChats, toReadableDateTime } from "@app/components/chating/helpers/chatDatetime";
+import {useAuth} from "@app/AuthContext";
+
+const MAIN_FONT_SIZE = 20
 
 
 const setNewChatMessages = (event: NotificationWillDisplayEvent, chats: ChatInterface[]) => {
@@ -18,6 +21,8 @@ const setNewChatMessages = (event: NotificationWillDisplayEvent, chats: ChatInte
             chats[i].last_message.content = message.content;
             chats[i].last_message.created_at = message.created_at;
             chats[i].last_message.edited_at = message.edited_at;
+            const buf = chats[i];
+            console.log(buf)
             break;
         }
     }
@@ -28,38 +33,63 @@ const setNewChatMessages = (event: NotificationWillDisplayEvent, chats: ChatInte
 const Chats = ({route, navigation}) => {
 
     const [chats, setChats] = useState<ChatInterface[] | null>(null);
-    const user = JSON.parse(storage.getString("auth") || "{}").user.username;
-    console.log(user);
+    const {authState} = useAuth();
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [error, setError] = useState("");
+    const auth: Auth = JSON.parse(storage.getString("auth") || "{}");
 
     useEffect(() => {
-        const auth: Auth = JSON.parse(storage.getString("auth"));
         console.log(auth);
-        axios.get(AppBaseURL + "chat/", {
-            headers: {
-                Authorization: `Bearer ${auth.access}`
-            }
-        })
+        axios.get(AppBaseURL + "chat/")
         .then((response) => {
             if (!isAChatArray(response.data)) return
             const sortedChats = response.data.sort(sortChats);
             setChats(sortedChats);
-            console.log(sortedChats);
         })
         .catch((e) => console.log(e))
     }, [])
 
-    function newChats(e: NotificationWillDisplayEvent) {
+    const updateChats = (e: NotificationWillDisplayEvent) => {
         e.preventDefault();
         if (!chats) return null;
         setNewChatMessages(e, chats);
+        chats.sort(sortChats);
         setChats(() => [...chats]);
     }
 
-    OneSignal.Notifications.addEventListener("foregroundWillDisplay", newChats);
+    OneSignal.Notifications.addEventListener("foregroundWillDisplay", updateChats);
     
 
     return (
         <View style={styles.container}>
+            <View style={styles.phoneNumberBlock}>
+                <View style={styles.phoneNumberInputBlock}>
+                    <TextInput style={styles.phoneNumberInput} keyboardType={"phone-pad"} onChangeText={(text) => {
+                        setPhoneNumber(text);
+                        if (error) setError("")}} />
+                    <Pressable style={styles.phoneNumberButton} onPress={() => {
+                        axios.get(AppBaseURL + `user/${encodeURIComponent(phoneNumber)}`)
+                        .then((response) => {
+                            const userData = response.data
+                            axios.get(AppBaseURL + `chat/get_chat_by_user/?phone_number=${encodeURIComponent(phoneNumber)}`, {
+                                headers: {
+                                    Authorization: `Bearer ${auth.access}`
+                                }
+                            })
+                                .then((resp) => {
+                                    navigation.navigate("Chat", {chatData: resp.data})
+                                })
+                                .catch((e) => {
+                                    navigation.navigate("Chat", {userData: userData})
+                                })
+                        })
+                        .catch((err) => setError(err.response.data["detail"]))
+                    }}>
+                        <Image source={require("../../../assets/chat-icons/submit.png")} style={styles.phoneNumberButtonImage}/>
+                    </Pressable>
+                </View>
+                <Text style={styles.phoneNumberError}>{error}</Text>
+            </View>
             <FlatList data={chats} 
                     renderItem={({item}) => {
                     return (
@@ -69,7 +99,7 @@ const Chats = ({route, navigation}) => {
                         }
                             }>
                             <View style={styles.senderTextBlock}>
-                                <Text style={styles.messageSender}>{(item.first_user == user) ? item.second_user : item.first_user}</Text>
+                                <Text style={styles.messageSender}>{(item.first_user == authState.user?.username) ? item.second_user : item.first_user}</Text>
                                 <Text style={styles.messageText}>{item.last_message.content}</Text>
                             </View>    
                             <View style={styles.dateTimeBlock}>
@@ -87,7 +117,37 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#007767",
-        // alignItems: "center"
+        paddingTop: 10,
+        rowGap: 10
+    },
+    phoneNumberBlock: {
+        alignSelf: "center",
+        width: "70%"
+    },
+    phoneNumberInputBlock: {
+        backgroundColor: "white",
+        borderColor: "black",
+        flexDirection: "row",
+        height: 50,
+        borderWidth: 3,
+        borderRadius: 10,
+        paddingLeft: 10,
+    },
+    phoneNumberInput: {
+        fontSize: MAIN_FONT_SIZE,
+        flex: 0.8
+    },
+    phoneNumberButton: {
+        flex: 0.2,
+        alignItems: "center"
+    },
+    phoneNumberButtonImage: {
+        height: "100%", 
+        aspectRatio: 1
+    },
+    phoneNumberError: {
+        color: "#FF0000",
+        paddingLeft: 5
     },
     message: {
         backgroundColor: "white",
@@ -101,11 +161,11 @@ const styles = StyleSheet.create({
         flex: 0.8
     },
     messageSender: {
-        fontSize: 20,
+        fontSize: MAIN_FONT_SIZE,
         fontWeight: "bold"
     },
     messageText: {
-        fontSize: 20,
+        fontSize: MAIN_FONT_SIZE,
     },
     dateTimeBlock: {
         flex: 0.2,

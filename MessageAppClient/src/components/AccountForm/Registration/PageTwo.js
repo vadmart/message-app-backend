@@ -12,7 +12,7 @@ import {
     } from "react-native"
 import axios from "axios";
 import { BaseURL } from "./BaseURL";
-import { errInputStyle } from "../../errorStyle";
+import { errInputStyle } from "../../helpers/errorStyle";
 import FormLinkButton from "../FormLinkButton";
 import FormButton from "../FormButton";
 

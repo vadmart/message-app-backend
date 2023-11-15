@@ -1,50 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { StyleSheet, View, Image, Text, TextInput } from "react-native";
 import axios from "axios";
 import { storage } from "../../Storage";
-import { errInputStyle, errLabelStyle } from "../../errorStyle";
+import { errInputStyle, errLabelStyle } from "../../helpers/errorStyle";
 import { BaseURL } from "./BaseURL";
 import FormButton from "../FormButton";
-import FormContainer from "../../FormContainer";
+import FormContainer from "../FormContainer";
 import { OneSignal } from "react-native-onesignal";
-
-const ONESIGNAL_PATCH_SUBSCRIPTION_ALIAS_URL = "https://onesignal.com/api/v1/apps/app_id/subscriptions/subscription_id/owner";
+import {useAuth} from "@app/AuthContext";
 
 
 const PageTwo = ({ route, navigation }) => {
-    const {username, phoneNumber} = route.params
-    function handleForm() {
+    const {username, phoneNumber} = route.params;
+    const {onVerify} = useAuth();
+    async function handleForm() {
+        setIsFormHandled(true);
         const otpCode = firstValue + secondValue + thirdValue + fourthValue + fifthValue + sixthValue;
-        console.log(otpCode);
-        axios.post(BaseURL + "verify/", {
-            "username": username,
-            "phone_number": phoneNumber,
-            "otp_code": otpCode,
-        })
-        .then((response) => {
-            storage.set("auth", JSON.stringify(response.data));
-            OneSignal.login(response.data.user.public_id);
-            console.log(response.data.user.public_id);    
-            // axios.patch(ONESIGNAL_PATCH_SUBSCRIPTION_ALIAS_URL.replace("app_id", "f3536252-f32f-4823-9115-18b1597b3b1a")
-            // .replace("subscription_id", OneSignal.User.pushSubscription.getPushSubscriptionId()), {
-            //     "identity": {
-            //         "external_id": response.data.user.public_id
-            //     }
-            // }, {
-            //     headers: {
-            //         "Accept": "application/json",
-            //         "Content-Type": "application/json",
-            //     }
-            // }).then((response) => console.log(response))
-            // .catch((err) => console.log(err.response.data))
-            navigation.navigate("MainScreen");
-        })
-        .catch((e) => {
-            console.log(e.response.data)
-            setIsFormHandled(true);
-            setErrStyle(errInputStyle);
-            setLabelText(e.response.data["detail"] || e.response.data["username"]);
-        })
+        const response = await onVerify(username, phoneNumber, otpCode);
+        if (response.error) {
+            setLabelText(response.msg.detail);
+            setErrStyle(errInputStyle)
+        }
     }
 
 
@@ -74,7 +50,7 @@ const PageTwo = ({ route, navigation }) => {
 
     if (sixthValue && !isFormHandled) {
         handleForm();
-    };
+    }
 
     return (
     <FormContainer>
@@ -84,6 +60,7 @@ const PageTwo = ({ route, navigation }) => {
         <View style={styles.mainBlock}>
             <Text style={styles.labelText}>Enter your verification code:</Text>
             <View style={styles.inputContainer}>
+            {/* TODO: create a component from text cells */}
                 <View style={styles.inputBlock}>
                     <View style={styles.inputHalfBlock}>
                         <TextInput style={[styles.input, errStyle]}

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { StyleSheet, View, Image, TextInput, Pressable, Text } from "react-native";
 import axios from "axios";
-import { errInputStyle } from "../../errorStyle";
+import { errInputStyle } from "../../helpers/errorStyle";
 import { BaseURL } from "./BaseURL";
 import FormLinkButton from "../FormLinkButton";
 import FormButton from "../FormButton";
-import capitalize from "../../../capitalize";
+import capitalize from "../../../utils/capitalize";
 
 
 

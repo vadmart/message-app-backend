@@ -1,1 +1,0 @@
-export const AppBaseURL = "https://b3dd-178-150-167-216.ngrok-free.app/api/v1/";

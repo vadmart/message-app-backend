@@ -79,7 +79,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'messenger.wsgi.application'
-ASGI_APPLICATION = 'messenger.asgi.application'
+# ASGI_APPLICATION = 'messenger.asgi.application'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 

@@ -1,13 +1,10 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
 import { StyleSheet, View, Image, TextInput, Pressable, Text  } from "react-native";
-import axios from "axios";
-import { errInputStyle, errLabelStyle } from "../../errorStyle";
-import { BaseURL } from "./BaseURL";
-import FormButton from "../FormButton"
-import FormLinkButton from "../FormLinkButton";
-import FormContainer from "../../FormContainer";
-import { storage } from "../../Storage";
-import { OneSignal } from "react-native-onesignal";
+import { errInputStyle, errLabelStyle } from "../../helpers/errorStyle";
+import { useAuth } from "@app/AuthContext"
+import FormButton from "@app/components/AccountForm/FormButton"
+import FormLinkButton from "@app/components/AccountForm/FormLinkButton";
+import FormContainer from "@app/components/AccountForm/FormContainer";
 
 
 
@@ -19,9 +16,10 @@ const LoginPageOne = ({ navigation }) => {
     const [phoneNumberErrStyle, setPhoneNumberErrStyle] = useState(null);
     const [phoneNumberLabelText, setPhoneNumberLabelText] = useState("");
     const [validationErrText, setValidationErrText] = useState("");
+    const {onLogin} = useAuth();
 
 
-    function handleFormPage(e) {
+    async function handleLoginSubmit(e) {
         if (!username) {
             setUsernameInputStyle(errInputStyle);
             setUsernameLabelText("Field cannot be empty.");
@@ -32,18 +30,18 @@ const LoginPageOne = ({ navigation }) => {
             setPhoneNumberLabelText("Field cannot be empty.");
             return
         }
-        axios.post(BaseURL, {
-            "username": username,
-            "phone_number": "+380" + phoneNumber
-        })
-        .then((response) => {
-            navigation.navigate("LoginPageTwo", {username: username, phoneNumber: "+380" + phoneNumber});
-            console.log(response.data)
-        })
-        .catch((e) => {
-            console.log(e.response.data);
-            setValidationErrText(e.response.data["detail"] || e.response.data["username"] || e.response.data["phone_number"]);
-        })
+        const response = await onLogin(username, phoneNumber);
+        if (!response.error) {
+            navigation.navigate("LoginPageTwo", {username, phoneNumber})
+            return response
+        }
+        if (response.msg.username) {
+            setUsernameInputStyle(errInputStyle);
+            setUsernameLabelText(response.msg.username);
+        } else if (response.msg.phone_number) {
+            setPhoneNumberErrStyle(errInputStyle);
+            setPhoneNumberLabelText(response.msg.phone_number);
+        }
     }
 
     return (
@@ -56,53 +54,53 @@ const LoginPageOne = ({ navigation }) => {
                     <FormLinkButton text={"Registration"} onSubmit={() => navigation.navigate("Registration", {screen: "RegPageOne"})} />
                 </View>
                 <View style={styles.inputContainer}>
-                        <View style={styles.inputBlock}>
-                            <TextInput style={[styles.input, usernameInputStyle]}
-                                onChangeText={onChangeUsername}
+                    <View>
+                        <TextInput style={[styles.input, usernameInputStyle]}
+                            onChangeText={onChangeUsername}
+                            onChange={() => {
+                                if (usernameErrText) {
+                                    setUsernameInputStyle(null);
+                                    setUsernameLabelText("");
+                                }
+                                if (validationErrText) {
+                                    setValidationErrText("");
+                                }
+                            }}
+                            placeholder="Username"
+                            placeholderTextColor={usernameInputStyle ? "#FF000025" : "#17171729"}
+                            value={username}
+                        />
+                        <Text style={{color: errInputStyle.color}}>{usernameErrText}</Text>
+                    </View>
+                    <View style={[styles.phoneInputContainer]}>
+                        <View style={[styles.phoneInputBlock, phoneNumberErrStyle]}>
+                            <Text style={styles.phoneCode}>+380</Text>
+                            <TextInput style={[styles.phoneNumberInput, {fontSize: (phoneNumber) ? 18 : 15}]}
+                                keyboardType={"decimal-pad"}
+                                onChangeText={onChangePhoneNumber}
                                 onChange={() => {
-                                    if (usernameErrText) {
-                                        setUsernameInputStyle(null);
-                                        setUsernameLabelText("");
+                                    if (phoneNumberLabelText) {
+                                        setPhoneNumberErrStyle(false);
+                                        setPhoneNumberLabelText("");
                                     }
                                     if (validationErrText) {
-                                        setValidationErrText("");
+                                        setValidationErrText(null);
                                     }
                                 }}
-                                placeholder="Username"
-                                placeholderTextColor={usernameInputStyle ? "#FF000025" : "#17171729"}
-                                value={username}
+                                placeholder={"Enter your phone number"}
+                                placeholderTextColor={"#17171729"}
+                                value={phoneNumber}
                             />
-                            <Text style={{color: errInputStyle.color}}>{usernameErrText}</Text>
                         </View>
-                        <View style={[styles.phoneInputContainer]}>
-                            <View style={[styles.phoneInputBlock, phoneNumberErrStyle]}>
-                                <Text style={styles.phoneCode}>+380</Text>
-                                <TextInput style={[styles.phoneNumberInput, {fontSize: (phoneNumber) ? 18 : 15}]}
-                                    keyboardType={"decimal-pad"}
-                                    onChangeText={onChangePhoneNumber}
-                                    onChange={() => {
-                                        if (phoneNumberLabelText) {
-                                            setPhoneNumberErrStyle(false);
-                                            setPhoneNumberLabelText(""); 
-                                        }
-                                        if (validationErrText) {
-                                            setValidationErrText(null);
-                                        }
-                                    }}
-                                    placeholder={"Enter your phone number"}
-                                    placeholderTextColor={"#17171729"}
-                                    value={phoneNumber} 
-                                />
-                            </View>
-                            <Text style={{color: errInputStyle.color}}>{phoneNumberLabelText}</Text>
-                        </View>
+                        <Text style={{color: errInputStyle.color}}>{phoneNumberLabelText}</Text>
+                    </View>
                 </View>
                 <View style={styles.validationErrBlock}>
                     <Text style={errLabelStyle}>{validationErrText}</Text>
                 </View>
                 <View style={styles.buttonBlock}>
                     <FormButton text={"Continue"}
-                                onPress={handleFormPage} 
+                                onPress={handleLoginSubmit}
                     />
                 </View>
             </View>

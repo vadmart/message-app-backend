@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from message_app.auth.login.views import UserAuthView, UserVerifyView
 from message_app.auth.register.views import RegisterViewSet
 from message_app.chating.viewsets import ChatViewSet, MessageViewSet
+from message_app.auth.user.viewsets import UserViewSet
 from rest_framework.routers import SimpleRouter
 from message_app.chating import consumers
 
@@ -11,6 +12,7 @@ router = SimpleRouter()
 router.register("chat", ChatViewSet, basename="chat")
 router.register("message", MessageViewSet, basename="message")
 router.register("auth/register", RegisterViewSet, basename="auth-register")
+router.register("user", UserViewSet, basename="user")
 
 urlpatterns = [
     path("auth/login/", UserAuthView.as_view(), name="auth-login"),

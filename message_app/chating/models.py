@@ -13,6 +13,9 @@ class Chat(AbstractModel):
     first_user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="first_user")
     second_user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="second_user")
 
+    class Meta:
+        unique_together = ["first_user", "second_user"]
+
 
 class Message(AbstractModel):
     chat = models.ForeignKey(to=Chat, on_delete=models.CASCADE)

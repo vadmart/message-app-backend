@@ -1,13 +1,15 @@
 import React, {useRef, useState} from "react"
 import axios from "axios";
-import { AppBaseURL } from "../../AppBaseURL";
+import { AppBaseURL } from "../../config";
 import {StyleSheet, TextInput, View, Pressable, Image} from "react-native"
 
-export function ChatKeyboard({chatData, authData}) {
+export function ChatKeyboard({chatData=null, userData=null, authData}) {
     const [inputtedData, setInputtedData] = useState("")
+
     const inputFieldRef = useRef(null);
 
-    function createMessage() {
+    const createMessage = () =>  {
+        if (chatData) {
         axios.post(AppBaseURL + "message/", {
             "content": inputtedData,
             "chat": chatData.public_id
@@ -23,22 +25,42 @@ export function ChatKeyboard({chatData, authData}) {
             console.error(reason);
         })
     }
+    else if (userData) {
+        axios.post(AppBaseURL + "chat/", {
+            "second_user": userData.username,
+            "content": inputtedData
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${authData.access}`
+            }
+        }).then((response) => {
+            chatData = response.data;
+            console.log(chatData)
+            inputFieldRef.current.clear();
+        })
+        .catch((reason) => {
+            console.error(reason);
+        })
+    }
+}
     return (
         <>
-            <View style={styles.keyboardBlock}>
-                <TextInput style={styles.keyboard} 
-                            ref={inputFieldRef}
-                            onChangeText={(text) => {setInputtedData(text)}} 
-                            placeholder={"Type some text..."} 
-                />
-            </View>
-                    <View style={styles.optionsBlock}>
-                        <Pressable style={styles.sendButton} 
-                                onPress={createMessage}
-                                disabled={(inputtedData) ? false : true}>
-                    <Image style={styles.sendButtonIcon} source={require("../../../assets/chat-icons/send.png")} resizeMethod={"resize"} />
-                </Pressable>
-            </View>
+        <View style={styles.keyboardBlock}>
+            <TextInput style={styles.keyboard} 
+                        ref={inputFieldRef}
+                        onChangeText={(text) => {setInputtedData(text)}} 
+                        placeholder={"Type some text..."} 
+            />
+        </View>
+        <View style={styles.optionsBlock}>
+        <Pressable 
+                    onPress={createMessage}
+                    disabled={(inputtedData) ? false : true}
+                    style={{padding: 3}}>
+        <Image style={styles.sendButtonIcon} source={require("../../../assets/chat-icons/convert.png")} resizeMethod={"resize"} />
+        </Pressable>
+        </View>
         </>
     )
 }
@@ -58,12 +80,8 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingRight: 5
     },
-    sendButton: {
-        objectFit: "fill",
-        aspectRatio: 1
-    },
     sendButtonIcon: {
         height: "85%",
-        width: "85%"
+        aspectRatio: 1
     }
 });
