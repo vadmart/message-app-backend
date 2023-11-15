@@ -1,6 +1,6 @@
 import React, {useRef, useState} from "react"
 import axios from "axios";
-import { AppBaseURL } from "../../config";
+import { AppBaseURL } from "../../../config";
 import {StyleSheet, TextInput, View, Pressable, Image} from "react-native"
 
 export function ChatKeyboard({chatData=null, userData=null, authData}) {
@@ -58,7 +58,7 @@ export function ChatKeyboard({chatData=null, userData=null, authData}) {
                     onPress={createMessage}
                     disabled={(inputtedData) ? false : true}
                     style={{padding: 3}}>
-        <Image style={styles.sendButtonIcon} source={require("../../../assets/chat-icons/convert.png")} resizeMethod={"resize"} />
+        <Image style={styles.sendButtonIcon} source={require("../../../../assets/chat-icons/convert.png")} resizeMethod={"resize"} />
         </Pressable>
         </View>
         </>

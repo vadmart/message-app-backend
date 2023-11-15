@@ -6,8 +6,8 @@ import { storage } from "../Storage";
 import axios from 'axios';
 import { Message, ChatInterface, isAMessage } from "./MessageType";
 import { User } from "./UserType";
-import { ChatKeyboard } from "./ChatKeyboard";
-import MessageItem from "./MessageItem";
+import { ChatKeyboard } from "./elements/ChatKeyboard";
+import MessageItem from "./elements/MessageItem";
 
 
 const Chat = ({route}) => {

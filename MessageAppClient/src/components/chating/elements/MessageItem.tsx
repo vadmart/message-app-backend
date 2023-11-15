@@ -1,6 +1,6 @@
 import {View, Text, StyleSheet} from "react-native"
-import { Message } from "./MessageType";
-import { toReadableDate, toReadableTime } from "./helpers/chatDatetime";
+import { Message } from "../MessageType";
+import { toReadableDate, toReadableTime } from "../helpers/chatDatetime";
 
 const MessageItem = ({index, messages}: {index: number, messages: readonly Message[]}) => {
     console.log("rendering MessageItem:");

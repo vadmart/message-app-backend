@@ -8,6 +8,7 @@ import { NotificationWillDisplayEvent, OneSignal } from "react-native-onesignal"
 import { ChatInterface, isAMessage, isAChatArray } from "@app/components/chating/MessageType";
 import { sortChats, toReadableDateTime } from "@app/components/chating/helpers/chatDatetime";
 import {useAuth} from "@app/AuthContext";
+import ContactSearcher from "@app/components/chating/elements/ContactSearcher";
 
 const MAIN_FONT_SIZE = 20
 
@@ -34,8 +35,6 @@ const Chats = ({route, navigation}) => {
 
     const [chats, setChats] = useState<ChatInterface[] | null>(null);
     const {authState} = useAuth();
-    const [phoneNumber, setPhoneNumber] = useState("");
-    const [error, setError] = useState("");
     const auth: Auth = JSON.parse(storage.getString("auth") || "{}");
 
     useEffect(() => {
@@ -62,43 +61,16 @@ const Chats = ({route, navigation}) => {
 
     return (
         <View style={styles.container}>
-            <View style={styles.phoneNumberBlock}>
-                <View style={styles.phoneNumberInputBlock}>
-                    <TextInput style={styles.phoneNumberInput} keyboardType={"phone-pad"} onChangeText={(text) => {
-                        setPhoneNumber(text);
-                        if (error) setError("")}} />
-                    <Pressable style={styles.phoneNumberButton} onPress={() => {
-                        axios.get(AppBaseURL + `user/${encodeURIComponent(phoneNumber)}`)
-                        .then((response) => {
-                            const userData = response.data
-                            axios.get(AppBaseURL + `chat/get_chat_by_user/?phone_number=${encodeURIComponent(phoneNumber)}`, {
-                                headers: {
-                                    Authorization: `Bearer ${auth.access}`
-                                }
-                            })
-                                .then((resp) => {
-                                    navigation.navigate("Chat", {chatData: resp.data})
-                                })
-                                .catch((e) => {
-                                    navigation.navigate("Chat", {userData: userData})
-                                })
-                        })
-                        .catch((err) => setError(err.response.data["detail"]))
-                    }}>
-                        <Image source={require("../../../assets/chat-icons/submit.png")} style={styles.phoneNumberButtonImage}/>
-                    </Pressable>
-                </View>
-                <Text style={styles.phoneNumberError}>{error}</Text>
-            </View>
+            <ContactSearcher navigation={navigation}/>
             <FlatList data={chats} 
                     renderItem={({item}) => {
                     return (
                         <Pressable style={styles.message} onPress={(e, data=item) => {
-                            console.log(data);
                             navigation.navigate("Chat", {chatData: data});
                         }
                             }>
                             <View style={styles.senderTextBlock}>
+                                {/* @ts-ignore */}
                                 <Text style={styles.messageSender}>{(item.first_user == authState.user?.username) ? item.second_user : item.first_user}</Text>
                                 <Text style={styles.messageText}>{item.last_message.content}</Text>
                             </View>    
@@ -119,35 +91,6 @@ const styles = StyleSheet.create({
         backgroundColor: "#007767",
         paddingTop: 10,
         rowGap: 10
-    },
-    phoneNumberBlock: {
-        alignSelf: "center",
-        width: "70%"
-    },
-    phoneNumberInputBlock: {
-        backgroundColor: "white",
-        borderColor: "black",
-        flexDirection: "row",
-        height: 50,
-        borderWidth: 3,
-        borderRadius: 10,
-        paddingLeft: 10,
-    },
-    phoneNumberInput: {
-        fontSize: MAIN_FONT_SIZE,
-        flex: 0.8
-    },
-    phoneNumberButton: {
-        flex: 0.2,
-        alignItems: "center"
-    },
-    phoneNumberButtonImage: {
-        height: "100%", 
-        aspectRatio: 1
-    },
-    phoneNumberError: {
-        color: "#FF0000",
-        paddingLeft: 5
     },
     message: {
         backgroundColor: "white",
