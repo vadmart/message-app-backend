@@ -5,7 +5,8 @@ module.exports = function(api) {
     "plugins": [
     ["module-resolver", {
       "alias": {
-        "@app": "./src"
+        "@app": "./src",
+        "@img": "./assets"
       }
     }]
   ]

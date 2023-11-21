@@ -1,30 +1,31 @@
-import React, { useEffect, useState, } from "react"
-import { NotificationWillDisplayEvent, OneSignal } from "react-native-onesignal";
+import React, { useEffect, useState, useRef } from "react"
+import { OneSignal } from "react-native-onesignal";
 import { View, StyleSheet, FlatList } from "react-native";
-import { AppBaseURL } from "../../config";
-import { storage } from "../Storage";
+import { AppBaseURL } from "@app/config";
 import axios from 'axios';
-import { Message, ChatInterface, isAMessage } from "./MessageType";
-import { User } from "./UserType";
-import { ChatKeyboard } from "./elements/ChatKeyboard";
+import { Message, Chat_, isAMessage } from "@app/components/chating/MessageType";
+import { User } from "@app/components/chating/UserType";
+import { ChatKeyboard } from "@app/components/chating/elements/ChatKeyboard";
 import MessageItem from "./elements/MessageItem";
 
 
-const Chat = ({route}) => {
+const Chat = ({route, navigation}) => {
     console.log("rendering Chat");
-    const authData = JSON.parse(storage.getString("auth") || "{}");
-    if (authData.length == 0) return;
     const [messages, setMessages] = useState<Message[]>(null);
-    let {userData, chatData}: {userData: User, chatData: ChatInterface} = route.params;
+    const messageListElem = useRef(null);
+    let {userData, chatData}: {userData: User, chatData: Chat_} = route.params;
+
+    // changing navigation header title to username
+    useEffect(() => {
+        navigation.setOptions({
+        title: route.params.title
+      })
+    }, [navigation]);
 
     useEffect(() => {
         // if we have only user data and no chat data, we won't receive messages, because they obviously don't exist
         if (!chatData) return;
-        axios.get(AppBaseURL + `message/?chat_id=${chatData.public_id}`, {
-            headers: {
-                Authorization: `Bearer ${authData.access}`
-            }
-        })
+        axios.get(AppBaseURL + `message/?chat_id=${chatData.public_id}`)
         .then((response) => {
             setMessages(response.data);
         })
@@ -33,29 +34,27 @@ const Chat = ({route}) => {
         })
     }, [])
 
-    const updateMessage = (e: NotificationWillDisplayEvent) => {
+    OneSignal.Notifications.addEventListener("foregroundWillDisplay", (e) => {
         e.preventDefault();
         if (!messages || !isAMessage(e.notification.additionalData)) return
-        console.log("Received message notification...")
         const message = e.notification.additionalData;
         message.content = e.notification.body;
         setMessages(() => [...messages, message]);
-        console.log(messages);
-    }
-    
-    OneSignal.Notifications.addEventListener("foregroundWillDisplay", updateMessage);
+        messageListElem.current?.scrollToEnd();
+    });
 
     return (
         <View style={styles.container}>
             <FlatList
-            style={{paddingTop: 10}} 
+            style={{paddingTop: 10}}
             data={messages}
+            ref={messageListElem}
             renderItem={(props) => {
                 return <MessageItem index={props.index} messages={messages}/>
             }}
             />
             <View style={styles.footer}>
-                <ChatKeyboard authData={authData} userData={userData} chatData={chatData}/>
+                <ChatKeyboard userData={userData} chatData={chatData}/>
             </View>
         </View>
     )

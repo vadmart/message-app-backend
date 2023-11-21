@@ -1,6 +1,6 @@
-import { ChatInterface } from "../MessageType";
+import { Chat_ } from "../MessageType";
 
-export const sortChats = (firstChat: ChatInterface, secondChat: ChatInterface) => {
+export const sortChats = (firstChat: Chat_, secondChat: Chat_) => {
     return new Date(secondChat.last_message.created_at).getTime() - new Date(firstChat.last_message.created_at).getTime()
 };
 
@@ -26,5 +26,5 @@ export const toReadableDate = (dateTime: Date): string => {
 }
 
 export const toReadableDateTime = (dateTime: Date): string => {
-    return `${dateTime.getDate().toString().padStart(2, "0")}.${dateTime.getMonth().toString().padStart(2, "0")}.${dateTime.getFullYear()} ${toReadableTime(dateTime)}`
+    return `${dateTime.getDate().toString().padStart(2, "0")}.${(dateTime.getMonth() + 1).toString().padStart(2, "0")}.${dateTime.getFullYear()} ${toReadableTime(dateTime)}`
 }

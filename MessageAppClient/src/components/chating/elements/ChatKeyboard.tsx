@@ -1,22 +1,18 @@
 import React, {useRef, useState} from "react"
 import axios from "axios";
-import { AppBaseURL } from "../../../config";
+import { AppBaseURL } from "@app/config";
 import {StyleSheet, TextInput, View, Pressable, Image} from "react-native"
 
-export function ChatKeyboard({chatData=null, userData=null, authData}) {
+export function ChatKeyboard({chatData=null, userData=null}) {
     const [inputtedData, setInputtedData] = useState("")
 
     const inputFieldRef = useRef(null);
 
     const createMessage = () =>  {
-        if (chatData) {
+    if (chatData) {
         axios.post(AppBaseURL + "message/", {
             "content": inputtedData,
             "chat": chatData.public_id
-        }, {
-            "headers": {
-                "Authorization": `Bearer ${authData.access}`
-            }
         }).then((response) => {
             console.log(response.data);
             inputFieldRef.current.clear();
@@ -29,11 +25,6 @@ export function ChatKeyboard({chatData=null, userData=null, authData}) {
         axios.post(AppBaseURL + "chat/", {
             "second_user": userData.username,
             "content": inputtedData
-        },
-        {
-            headers: {
-                Authorization: `Bearer ${authData.access}`
-            }
         }).then((response) => {
             chatData = response.data;
             console.log(chatData)
@@ -46,21 +37,21 @@ export function ChatKeyboard({chatData=null, userData=null, authData}) {
 }
     return (
         <>
-        <View style={styles.keyboardBlock}>
-            <TextInput style={styles.keyboard} 
-                        ref={inputFieldRef}
-                        onChangeText={(text) => {setInputtedData(text)}} 
-                        placeholder={"Type some text..."} 
-            />
-        </View>
-        <View style={styles.optionsBlock}>
-        <Pressable 
-                    onPress={createMessage}
-                    disabled={(inputtedData) ? false : true}
-                    style={{padding: 3}}>
-        <Image style={styles.sendButtonIcon} source={require("../../../../assets/chat-icons/convert.png")} resizeMethod={"resize"} />
-        </Pressable>
-        </View>
+            <View style={styles.keyboardBlock}>
+                <TextInput style={styles.keyboard}
+                            ref={inputFieldRef}
+                            onChangeText={(text) => {setInputtedData(text)}}
+                            placeholder={"Type some text..."}
+                />
+            </View>
+            <View style={styles.optionsBlock}>
+            <Pressable
+                        onPress={createMessage}
+                        disabled={(!inputtedData)}
+                        style={{padding: 3}}>
+            <Image style={styles.sendButtonIcon} source={require("../../../../assets/chat-icons/convert.png")} resizeMethod={"resize"} />
+            </Pressable>
+            </View>
         </>
     )
 }

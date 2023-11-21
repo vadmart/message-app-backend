@@ -33,7 +33,7 @@ const ContactSearcher = ({navigation}) => {
                 <Pressable style={styles.phoneNumberButton} onPress={() => {
 
                 }}>
-                    <Image source={require("../../../../assets/chat-icons/submit.png")}
+                    <Image source={require("@img/chat-icons/submit.png")}
                            style={styles.phoneNumberButtonImage}/>
                 </Pressable>
             </View>

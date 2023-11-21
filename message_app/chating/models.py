@@ -22,6 +22,7 @@ class Message(AbstractModel):
     sender = models.ForeignKey(to=User, on_delete=models.CASCADE)
     content = models.TextField()
     file = models.FileField(upload_to=path_upload_to, null=True, blank=True)
+    is_read = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Sender: {self.sender}, content: {self.content}"
