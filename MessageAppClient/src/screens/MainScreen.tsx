@@ -1,16 +1,28 @@
-import React from "react";
+import React, {createContext, useState} from "react";
 import Chats from "../components/chating/Chats";
 import Chat from "../components/chating/Chat"
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import {Chat_} from "@app/components/chating/MessageType";
+import {ChatProvider} from "@app/context/ChatContext";
 
+const ChatContext = createContext({});
 const Stack = createNativeStackNavigator();
 
-function MainScreen() {
+const MainScreen = () => {
+    const [chats, setChats] = useState<Chat_[]>([]);
+    const chatsState = {chats, setChats};
     return (
-    <Stack.Navigator initialRouteName={"Chats"}>
-        <Stack.Screen component={Chats} name={"Spilka"} options={{headerShown: false}}/>
-        <Stack.Screen component={Chat} name={"Chat"} />
-    </Stack.Navigator>
+        <ChatProvider value={chatsState}>
+            <Stack.Navigator initialRouteName={"Chats"}>
+                <Stack.Screen name={"Chats"}
+                              component={Chats}
+                              options={{headerShown: false}}
+                />
+                <Stack.Screen name={"Chat"}
+                              component={Chat}
+                              />
+            </Stack.Navigator>
+        </ChatProvider>
     )
 }
 

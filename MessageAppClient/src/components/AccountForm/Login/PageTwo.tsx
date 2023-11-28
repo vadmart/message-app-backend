@@ -7,7 +7,7 @@ import { BaseURL } from "./BaseURL";
 import FormButton from "../FormButton";
 import FormContainer from "../FormContainer";
 import { OneSignal } from "react-native-onesignal";
-import {useAuth} from "@app/AuthContext";
+import {useAuth} from "@app/context/AuthContext";
 
 
 const PageTwo = ({ route, navigation }) => {

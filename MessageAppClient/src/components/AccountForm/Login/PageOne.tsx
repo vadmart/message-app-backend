@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import { StyleSheet, View, Image, TextInput, Pressable, Text  } from "react-native";
 import { errInputStyle, errLabelStyle } from "../../helpers/errorStyle";
-import { useAuth } from "@app/AuthContext"
+import { useAuth } from "@app/context/AuthContext"
 import FormButton from "@app/components/AccountForm/FormButton"
 import FormLinkButton from "@app/components/AccountForm/FormLinkButton";
 import FormContainer from "@app/components/AccountForm/FormContainer";

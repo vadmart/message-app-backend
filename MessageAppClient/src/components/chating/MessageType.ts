@@ -1,4 +1,5 @@
 export interface Message {
+    public_id: string,
     chat: string,
     sender: string,
     created_at: string,
@@ -19,6 +20,20 @@ export interface Chat_ {
 export const isAMessage = (obj: any): obj is Message => {
     return "chat" in obj && "sender" in obj && "created_at" in obj && "edited_at" in obj
 }
+
+export const isAMessageArray = (obj: any): obj is Message[] => {
+    for (let message of obj) {
+        if (!("created_at" in message) ||
+            !("edited_at" in message) ||
+            !("sender" in message) ||
+            !("chat" in message) ||
+            !("public_id" in message) ||
+            !("is_read" in message)) return false
+    }
+    return true
+}
+
+
 
 export const isAChatArray = (obj: any): obj is Chat_[] => {
     for (let chat of obj) {

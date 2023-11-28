@@ -1,16 +1,18 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import axios from "axios";
 import {View, StyleSheet, FlatList} from "react-native";
 import {AppBaseURL} from "@app/config";
 import {Chat_, isAChatArray, isAMessage} from "@app/components/chating/MessageType";
-import {sortChats} from "@app/components/chating/helpers/chatDatetime";
-import {useAuth} from "@app/AuthContext";
 import ContactSearcher from "@app/components/chating/elements/ContactSearcher";
 import ChatItem from "@app/components/chating/elements/ChatItem";
 import {NotificationWillDisplayEvent, OneSignal} from "react-native-onesignal";
+import {useChat} from "@app/context/ChatContext";
 
+export const sortChats = (firstChat: Chat_, secondChat: Chat_) => {
+    return new Date(secondChat.last_message.created_at).getTime() - new Date(firstChat.last_message.created_at).getTime()
+};
 
-const setNewChatMessages = (event: NotificationWillDisplayEvent, chats: Chat_[]) => {
+const updateChats = (event: NotificationWillDisplayEvent, chats: Chat_[]) => {
     if (!isAMessage(event.notification.additionalData)) return
     const message = event.notification.additionalData;
     message.content = event.notification.body;
@@ -19,14 +21,15 @@ const setNewChatMessages = (event: NotificationWillDisplayEvent, chats: Chat_[])
             chats[i].last_message.content = message.content;
             chats[i].last_message.created_at = message.created_at;
             chats[i].last_message.edited_at = message.edited_at;
+            chats[i].last_message.is_read = message.is_read
+            chats[i].unread_messages_count += 1
             break;
         }
     }
 }
 
-const Chats = ({route, navigation}) => {
-    const [chats, setChats] = useState<null | Chat_[]>(null);
-    const {authState} = useAuth();
+const Chats = ({navigation}) => {
+    const {chats, setChats} = useChat();
 
     useEffect(() => {
         axios.get(AppBaseURL + "chat/")
@@ -42,7 +45,7 @@ const Chats = ({route, navigation}) => {
     OneSignal.Notifications.addEventListener("foregroundWillDisplay", (e) => {
         e.preventDefault();
         if (!chats) return;
-        setNewChatMessages(e, chats);
+        updateChats(e, chats);
         setChats(() => [...chats]);
     })
 
@@ -53,10 +56,13 @@ const Chats = ({route, navigation}) => {
             <FlatList data={chats}
                       renderItem={({item}) => {
                           return (
-                              <ChatItem navigation={navigation} user={authState.user} item={item}/>
+                              <ChatItem item={item}
+                                        navigation={navigation}
+                              />
                           )
                       }}
-                      extraData={chats}/>
+                      extraData={chats}
+            />
         </View>
     )
 }

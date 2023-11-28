@@ -1,16 +1,16 @@
 import {Pressable, StyleSheet, Text, View} from "react-native";
 import {toReadableDateTime} from "@app/components/chating/helpers/chatDatetime";
-import {Chat_} from "@app/components/chating/MessageType";
-import type {NativeStackScreenProps} from "@react-navigation/native-stack";
+import {useAuth} from "@app/context/AuthContext";
 import React from "react";
 
 
-const ChatItem = ({navigation, item, user}: {navigation, item: Chat_, user: any}) => {
+const ChatItem = ({item, navigation}) => {
+    const user = useAuth().authState.user;
     const companion = (item.first_user == user.username) ? item.second_user : item.first_user
 
     return (
-        <Pressable style={styles.message} onPress={(e, data = item) => {
-            navigation.navigate("Chat", {chatData: data, title: companion});
+        <Pressable style={styles.message} onPress={(e) => {
+            navigation.navigate("Chat", {chatData: item, title: companion});
         }
         }>
             <View style={styles.senderTextBlock}>
@@ -18,9 +18,9 @@ const ChatItem = ({navigation, item, user}: {navigation, item: Chat_, user: any}
                     style={styles.messageSender}>{companion}</Text>
                 <Text style={styles.messageText}>{item.last_message.content}</Text>
             </View>
-            <View style={styles.unreadCounter}>
-                <Text>{(item.unread_messages_count >= 1000) ? "999+" : item.unread_messages_count}</Text>
-            </View>
+            {item.unread_messages_count != 0 && <View style={styles.unreadCounter}>
+                                                    <Text>{(item.unread_messages_count >= 1000) ? "999+" : item.unread_messages_count}</Text>
+                                                </View>}
             <View style={styles.dateTimeBlock}>
                 <Text style={styles.messageDateTime}>{toReadableDateTime(new Date(item.last_message.created_at))}</Text>
             </View>

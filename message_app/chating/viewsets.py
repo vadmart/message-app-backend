@@ -26,7 +26,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         chat = serializer.save()
         message = Message.objects.create(chat=chat, sender=request.user, content=data["content"])
-        OneSignalPushNotifications().send_push_notification(message=message)
+        OneSignalPushNotifications().send_push_message(message=message)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False)
@@ -48,6 +48,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     http_method_names = ["get", "post", "patch", "put", "delete"]
     permission_classes = [IsAuthenticated]
+    lookup_field = "public_id"
 
     def get_queryset(self):
         chat_id = self.request.query_params["chat_id"]
@@ -59,6 +60,13 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=creation_data)
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
-        OneSignalPushNotifications().send_push_notification(message=message)
+        OneSignalPushNotifications().send_push_message(message=message)
         headers = self.get_success_headers(serializer.data)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(methods=["POST"], detail=True)
+    def read(self, request, *args, **kwargs):
+        message = get_object_or_404(Message, **kwargs)
+        message.is_read = True
+        message.save()
+        return Response(status=status.HTTP_200_OK)

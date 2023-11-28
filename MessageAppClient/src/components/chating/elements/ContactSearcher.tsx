@@ -2,6 +2,7 @@ import React, {useState} from "react";
 import {Image, Pressable, StyleSheet, Text, TextInput, View} from "react-native";
 import axios from "axios";
 import {AppBaseURL} from "@app/config";
+import {User} from "@app/components/chating/UserType";
 
 const ContactSearcher = ({navigation}) => {
     const [phoneNumber, setPhoneNumber] = useState("");
@@ -9,30 +10,27 @@ const ContactSearcher = ({navigation}) => {
 
     const handleSubmit = async () => {
     axios.get(AppBaseURL + `user/${encodeURIComponent(phoneNumber)}`)
-                        .then((response) => {
-                            const userData = response.data
-                            axios.get(AppBaseURL + `chat/get_chat_by_user/?phone_number=${encodeURIComponent(phoneNumber)}`)
-                                .then((resp) => {
-                                    navigation.navigate("Chat", {chatData: resp.data})
-                                })
-                                .catch((e) => {
-                                    navigation.navigate("Chat", {userData: userData})
-                                })
-                        })
-                        .catch((err) => setError(err.response.data["detail"]))
+        .then((response) => {
+            const userData: User = response.data
+            axios.get(AppBaseURL + `chat/get_chat_by_user/?phone_number=${encodeURIComponent(phoneNumber)}`)
+                .then((resp) => {
+                    navigation.navigate("Chat", {chatData: resp.data, title: userData.username})
+                })
+                .catch((e) => {
+                    navigation.navigate("Chat", {userData: userData})
+                })
+        })
+        .catch((err) => setError(err.response.data["detail"]))
 }
-
 
     return (
         <View style={styles.phoneNumberBlock}>
             <View style={styles.phoneNumberInputBlock}>
                 <TextInput style={styles.phoneNumberInput} keyboardType={"phone-pad"} onChangeText={(text) => {
                     setPhoneNumber(text);
-                    if (error) setError("")
+                    if (error) setError("");
                 }}/>
-                <Pressable style={styles.phoneNumberButton} onPress={() => {
-
-                }}>
+                <Pressable style={styles.phoneNumberButton} onPress={handleSubmit}>
                     <Image source={require("@img/chat-icons/submit.png")}
                            style={styles.phoneNumberButtonImage}/>
                 </Pressable>

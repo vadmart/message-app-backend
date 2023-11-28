@@ -4,9 +4,17 @@ import {AppBaseURL} from "@app/config";
 import axios from "axios";
 import {BaseURL} from "@app/components/AccountForm/Login/BaseURL";
 import {OneSignal} from "react-native-onesignal";
+import {User} from "@app/components/chating/UserType"
+
+export interface AuthState {
+    access: string | null,
+    refresh: string | null,
+    user: User | null,
+    authenticated: boolean | null
+}
 
 interface AuthProps {
-    authState?: { access: string| null, refresh: string | null, user: object | null, authenticated: boolean | null };
+    authState?: AuthState;
     onRegister?: (data: object) => Promise<any>;
     onLogin?: (username: string, phoneNumber: string) => Promise<any>;
     onVerify?: (username: string, phoneNumber: string, otpCode: string) => Promise<any>
@@ -20,9 +28,9 @@ export const useAuth = () => {
 
 export const AuthProvider = ({children}) => {
     const [authState, setAuthState] = useState<{
-        access: string| null,
+        access: string | null,
         refresh: string | null,
-        user: object | null,
+        user: User | null,
         authenticated: boolean | null
     }>({
         access: null,
@@ -32,7 +40,7 @@ export const AuthProvider = ({children}) => {
     });
 
     useEffect(() => {
-        const loadAuthData = async() => {
+        const loadAuthData = async () => {
             const authDataString = storage.getString("auth");
             console.log(authDataString);
             // TODO: change storing token-user data in MMKV
@@ -59,12 +67,13 @@ export const AuthProvider = ({children}) => {
         }
     }
 
-    const verify = async (username: string, phoneNumber: string, otpCode: string) =>
-    {
+    const verify = async (username: string, phoneNumber: string, otpCode: string) => {
         try {
-            const response = await axios.post(BaseURL + "verify/", {username,
-                                                                                                phone_number: phoneNumber,
-                                                                                                otp_code: otpCode});
+            const response = await axios.post(BaseURL + "verify/", {
+                username,
+                phone_number: phoneNumber,
+                otp_code: otpCode
+            });
             setAuthState({
                 access: response.data.access,
                 refresh: response.data.refresh,
@@ -81,7 +90,8 @@ export const AuthProvider = ({children}) => {
     }
 
     const authValue = {
-        onRegister: async () => {},
+        onRegister: async () => {
+        },
         onLogin: login,
         onVerify: verify,
         authState
