@@ -61,7 +61,6 @@ const Chats = ({navigation}) => {
                               />
                           )
                       }}
-                      extraData={chats}
             />
         </View>
     )

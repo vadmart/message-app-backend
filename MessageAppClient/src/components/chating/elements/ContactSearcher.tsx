@@ -3,29 +3,34 @@ import {Image, Pressable, StyleSheet, Text, TextInput, View} from "react-native"
 import axios from "axios";
 import {AppBaseURL} from "@app/config";
 import {User} from "@app/components/chating/UserType";
+import {err} from "react-native-svg/lib/typescript/xml";
 
 const ContactSearcher = ({navigation}) => {
     const [phoneNumber, setPhoneNumber] = useState("");
     const [error, setError] = useState("");
 
     const handleSubmit = async () => {
-    axios.get(AppBaseURL + `user/${encodeURIComponent(phoneNumber)}`)
-        .then((response) => {
-            const userData: User = response.data
-            axios.get(AppBaseURL + `chat/get_chat_by_user/?phone_number=${encodeURIComponent(phoneNumber)}`)
-                .then((resp) => {
-                    navigation.navigate("Chat", {chatData: resp.data, title: userData.username})
-                })
-                .catch((e) => {
-                    navigation.navigate("Chat", {userData: userData})
-                })
-        })
-        .catch((err) => setError(err.response.data["detail"]))
+        if (!phoneNumber) {
+            setError("This field might not be empty!");
+            return
+        }
+        axios.get(AppBaseURL + `user/${encodeURIComponent(phoneNumber)}`)
+            .then((response) => {
+                const userData: User = response.data
+                axios.get(AppBaseURL + `chat/get_chat_by_user/?phone_number=${encodeURIComponent(phoneNumber)}`)
+                    .then((resp) => {
+                        navigation.navigate("Chat", {chatData: resp.data, title: userData.username})
+                    })
+                    .catch((e) => {
+                        navigation.navigate("Chat", {userData: userData})
+                    })
+            })
+            .catch((err) => setError(err.response.data["detail"]))
 }
 
     return (
         <View style={styles.phoneNumberBlock}>
-            <View style={styles.phoneNumberInputBlock}>
+            <View style={[styles.phoneNumberInputBlock, error && {borderColor: "#BB3333"}]}>
                 <TextInput style={styles.phoneNumberInput} keyboardType={"phone-pad"} onChangeText={(text) => {
                     setPhoneNumber(text);
                     if (error) setError("");

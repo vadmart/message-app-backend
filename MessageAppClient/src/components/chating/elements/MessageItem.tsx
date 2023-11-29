@@ -3,6 +3,7 @@ import { Message } from "../MessageType";
 import { toReadableDate, toReadableTime } from "../helpers/chatDatetime";
 
 const MessageItem = ({index, messages}: {index: number, messages: readonly Message[]}) => {
+    console.log(`Rendering message item, index: ${index}`);
     const currentDateTime = new Date(messages[index].created_at);
     const previousDate = (index > 0) && new Date(messages[index - 1].created_at).getDate(); 
     const nextDate = (index < messages.length - 1) && new Date(messages[index + 1].created_at).getDate();

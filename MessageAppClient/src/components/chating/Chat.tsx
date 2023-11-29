@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef, useReducer} from "react"
+import React, {useEffect, useState, useRef} from "react"
 import { OneSignal } from "react-native-onesignal";
 import { View, StyleSheet, FlatList } from "react-native";
 import { AppBaseURL } from "@app/config";
@@ -9,6 +9,7 @@ import { ChatKeyboard } from "@app/components/chating/elements/ChatKeyboard";
 import MessageItem from "./elements/MessageItem";
 import {useAuth} from "@app/context/AuthContext";
 import {useChat} from "@app/context/ChatContext";
+
 
 
 const Chat = ({route, navigation}) => {
@@ -30,14 +31,17 @@ const Chat = ({route, navigation}) => {
         if (!chatData) return;
         axios.get(AppBaseURL + `message/?chat_id=${chatData.public_id}`)
         .then((response) => {
-            if (!isAMessageArray(response.data)) return
+            if (!isAMessageArray(response.data)) {
+                console.error("Response is not an array of messages!");
+                return
+            }
             for (let message of response.data) {
                 // if it is a message from another user, and it's not read, we mark it as read
                 if (authState.user.username != message.sender && !message.is_read) {
                     for (let chat of chats) {
                         if (chat.public_id == message.chat) {
-                            chat.unread_messages_count -= 1
-                            setChats(() => [...chats, chat])
+                            chat.unread_messages_count -= 1;
+                            setChats(() => [...chats]);
                         }
                     }
                     axios.post(AppBaseURL + `message/${message.public_id}/read/`)
@@ -68,10 +72,10 @@ const Chat = ({route, navigation}) => {
             style={{paddingTop: 10}}
             data={messages}
             ref={messageListElem}
-            initialNumToRender={7}
             renderItem={(props) => {
                 return <MessageItem index={props.index} messages={messages}/>
             }}
+            keyExtractor={(item) => item.public_id}
             />
             <View style={styles.footer}>
                 <ChatKeyboard userData={userData} chatData={chatData}/>
