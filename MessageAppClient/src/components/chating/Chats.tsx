@@ -7,12 +7,14 @@ import ContactSearcher from "@app/components/chating/elements/ContactSearcher";
 import ChatItem from "@app/components/chating/elements/ChatItem";
 import {NotificationWillDisplayEvent, OneSignal} from "react-native-onesignal";
 import {useChat} from "@app/context/ChatContext";
+import {useAuth} from "@app/context/AuthContext";
+import {User} from "@app/components/chating/UserType";
 
 export const sortChats = (firstChat: Chat_, secondChat: Chat_) => {
     return new Date(secondChat.last_message.created_at).getTime() - new Date(firstChat.last_message.created_at).getTime()
 };
 
-const updateChats = (event: NotificationWillDisplayEvent, chats: Chat_[]) => {
+const updateChats = (event: NotificationWillDisplayEvent, chats: Chat_[], currUser: User) => {
     if (!isAMessage(event.notification.additionalData)) return
     const message = event.notification.additionalData;
     message.content = event.notification.body;
@@ -21,15 +23,19 @@ const updateChats = (event: NotificationWillDisplayEvent, chats: Chat_[]) => {
             chats[i].last_message.content = message.content;
             chats[i].last_message.created_at = message.created_at;
             chats[i].last_message.edited_at = message.edited_at;
-            chats[i].last_message.is_read = message.is_read
-            chats[i].unread_messages_count += 1
+            chats[i].last_message.is_read = message.is_read;
+            if (currUser.username != chats[i].last_message.sender) {
+                chats[i].unread_messages_count += 1;
+            }
             break;
         }
     }
 }
 
 const Chats = ({navigation}) => {
+    console.log("Rendering Chats");
     const {chats, setChats} = useChat();
+    const {authState} = useAuth();
 
     useEffect(() => {
         axios.get(AppBaseURL + "chat/")
@@ -37,18 +43,25 @@ const Chats = ({navigation}) => {
                 if (!isAChatArray(response.data)) return
                 const sortedChats = response.data.sort(sortChats);
                 setChats(sortedChats);
-                console.log(chats);
             })
-            .catch((e) => console.log(e))
+            .catch((e) => console.log(e));
     }, [])
 
-    OneSignal.Notifications.addEventListener("foregroundWillDisplay", (e) => {
-        e.preventDefault();
-        if (!chats) return;
-        updateChats(e, chats);
-        setChats(() => [...chats]);
-    })
+    useEffect(() => {
+        const handleEventForegroundForChats = (e) => {
+            e.preventDefault();
+            if (!chats) return;
+            updateChats(e, chats, authState.user);
+            setChats(() => [...chats]);
+        };
 
+        OneSignal.Notifications.addEventListener("foregroundWillDisplay", handleEventForegroundForChats);
+
+        return () => {
+            console.log("Removing Chats event listener")
+            OneSignal.Notifications.removeEventListener("foregroundWillDisplay", handleEventForegroundForChats);
+        }
+    }, [chats]);
 
     return (
         <View style={styles.container}>
@@ -61,6 +74,7 @@ const Chats = ({navigation}) => {
                               />
                           )
                       }}
+                      keyExtractor={(item) => item.public_id}
             />
         </View>
     )

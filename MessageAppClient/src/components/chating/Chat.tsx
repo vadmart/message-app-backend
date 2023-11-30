@@ -13,7 +13,7 @@ import {useChat} from "@app/context/ChatContext";
 
 
 const Chat = ({route, navigation}) => {
-    console.log("rendering Chat");
+    console.log("Rendering Chat");
     const messageListElem = useRef(null);
     const {chats, setChats} = useChat();
     const [messages, setMessages] = useState<Message[]>(null);
@@ -23,6 +23,8 @@ const Chat = ({route, navigation}) => {
         title}: {userData: User, chatData: Chat_, title: string} = route.params;
 
     useEffect(() => {
+        console.log("Start useEffect in Chat");
+
         // changing navigation header title to username
         navigation.setOptions({
             title
@@ -30,52 +32,69 @@ const Chat = ({route, navigation}) => {
         // if we have only user data and no chat data, we won't receive messages, because they obviously don't exist
         if (!chatData) return;
         axios.get(AppBaseURL + `message/?chat_id=${chatData.public_id}`)
-        .then((response) => {
-            if (!isAMessageArray(response.data)) {
-                console.error("Response is not an array of messages!");
-                return
-            }
-            for (let message of response.data) {
-                // if it is a message from another user, and it's not read, we mark it as read
-                if (authState.user.username != message.sender && !message.is_read) {
-                    for (let chat of chats) {
-                        if (chat.public_id == message.chat) {
-                            chat.unread_messages_count -= 1;
-                            setChats(() => [...chats]);
-                        }
-                    }
-                    axios.post(AppBaseURL + `message/${message.public_id}/read/`)
-                        .then((resp) => console.log(resp.data))
-                        .catch((err) => console.warn(err))
+            .then((response) => {
+                if (!isAMessageArray(response.data)) {
+                    console.error("Response is not an array of messages!");
+                    return
                 }
-            }
+                for (let message of response.data) {
+                    // if it is a message from another user, and it's not read, we mark it as read
+                    if (authState.user.username != message.sender && !message.is_read) {
+                        for (let chat of chats) {
+                            if (chat.public_id == message.chat) {
+                                chat.unread_messages_count -= 1;
+                                setChats(() => [...chats]);
+                            }
+                        }
+                        axios.post(AppBaseURL + `message/${message.public_id}/read/`)
+                            .then((resp) => console.log(resp.data))
+                            .catch((err) => console.warn(err))
+                    }
+                }
             setMessages(response.data);
             messageListElem.current?.scrollToEnd();
+            console.log("Adding foregroundEventListener");
+
         })
         .catch((e) => {
             console.log(e);
         })
+
+        console.log("End useEffect in Chat");
+
+
     }, [])
 
-    OneSignal.Notifications.addEventListener("foregroundWillDisplay", (e) => {
-        e.preventDefault();
-        if (!messages || !isAMessage(e.notification.additionalData)) return
-        const message = e.notification.additionalData;
-        message.content = e.notification.body;
-        setMessages(() => [...messages, message]);
-        messageListElem.current?.scrollToEnd();
-    });
+    useEffect(() => {
+        const handleEventForegroundForChat = (e) => {
+                e.preventDefault();
+                if (!messages || !isAMessage(e.notification.additionalData)) return
+                const message = e.notification.additionalData;
+                message.content = e.notification.body;
+                setMessages(() => [...messages, message]);
+                messageListElem.current?.scrollToEnd();
+            }
+
+        OneSignal.Notifications.addEventListener("foregroundWillDisplay", handleEventForegroundForChat);
+        return () => {
+            console.log("Removing Chat event listener");
+            OneSignal.Notifications.removeEventListener("foregroundWillDisplay", handleEventForegroundForChat);
+        }
+    }, [chats]);
 
     return (
         <View style={styles.container}>
             <FlatList
-            style={{paddingTop: 10}}
-            data={messages}
-            ref={messageListElem}
-            renderItem={(props) => {
-                return <MessageItem index={props.index} messages={messages}/>
-            }}
-            keyExtractor={(item) => item.public_id}
+                style={{paddingTop: 10}}
+                data={messages}
+                ref={messageListElem}
+                renderItem={(props) => {
+                    return <MessageItem index={props.index} messages={messages}/>
+                }}
+                keyExtractor={(item) => {
+                    return item.public_id
+                }}
+                removeClippedSubviews={true}
             />
             <View style={styles.footer}>
                 <ChatKeyboard userData={userData} chatData={chatData}/>

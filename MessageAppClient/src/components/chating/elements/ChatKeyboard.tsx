@@ -4,37 +4,37 @@ import { AppBaseURL } from "@app/config";
 import {StyleSheet, TextInput, View, Pressable, Image} from "react-native"
 
 export function ChatKeyboard({chatData=null, userData=null}) {
-    const [inputtedData, setInputtedData] = useState("")
+    const [inputtedData, setInputtedData] = useState("");
 
     const inputFieldRef = useRef(null);
 
     const createMessage = () =>  {
-    if (chatData) {
-        axios.post(AppBaseURL + "message/", {
-            "content": inputtedData,
-            "chat": chatData.public_id
-        }).then((response) => {
-            console.log(response.data);
-            inputFieldRef.current.clear();
-        })
-        .catch((reason) => {
-            console.error(reason);
-        })
+        if (chatData) {
+            axios.post(AppBaseURL + "message/", {
+                "chat": chatData.public_id,
+                "content": inputtedData
+            }).then((response) => {
+                console.log(response.data);
+                inputFieldRef.current.clear();
+            })
+            .catch((reason) => {
+                console.error(reason);
+            })
+        }
+        else if (userData) {
+            axios.post(AppBaseURL + "chat/", {
+                "second_user": userData.username,
+                "content": inputtedData
+            }).then((response) => {
+                chatData = response.data;
+                console.log(chatData)
+                inputFieldRef.current.clear();
+            })
+            .catch((reason) => {
+                console.error(reason);
+            })
+        }
     }
-    else if (userData) {
-        axios.post(AppBaseURL + "chat/", {
-            "second_user": userData.username,
-            "content": inputtedData
-        }).then((response) => {
-            chatData = response.data;
-            console.log(chatData)
-            inputFieldRef.current.clear();
-        })
-        .catch((reason) => {
-            console.error(reason);
-        })
-    }
-}
     return (
         <>
             <View style={styles.keyboardBlock}>
