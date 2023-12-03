@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {Image, Pressable, StyleSheet, Text, TextInput, View} from "react-native";
 import axios from "axios";
 import {AppBaseURL} from "@app/config";
-import {User} from "@app/components/chating/UserType";
+import {User} from "@app/types/UserType";
 import {err} from "react-native-svg/lib/typescript/xml";
 
 const ContactSearcher = ({navigation}) => {

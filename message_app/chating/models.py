@@ -23,6 +23,8 @@ class Message(AbstractModel):
     content = models.TextField()
     file = models.FileField(upload_to=path_upload_to, null=True, blank=True)
     is_read = models.BooleanField(default=False)
+    edited_at = models.DateTimeField(null=True, blank=True)
+    is_edited = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Sender: {self.sender}, content: {self.content}"

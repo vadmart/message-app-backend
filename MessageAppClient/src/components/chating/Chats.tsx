@@ -2,13 +2,14 @@ import React, {useEffect} from "react";
 import axios from "axios";
 import {View, StyleSheet, FlatList} from "react-native";
 import {AppBaseURL} from "@app/config";
-import {Chat_, isAChatArray, isAMessage} from "@app/components/chating/MessageType";
+import {isAMessage} from "@app/types/MessageType";
+import {Chat_, isAChatArray} from "@app/types/ChatType";
 import ContactSearcher from "@app/components/chating/elements/ContactSearcher";
 import ChatItem from "@app/components/chating/elements/ChatItem";
 import {NotificationWillDisplayEvent, OneSignal} from "react-native-onesignal";
 import {useChat} from "@app/context/ChatContext";
 import {useAuth} from "@app/context/AuthContext";
-import {User} from "@app/components/chating/UserType";
+import {User} from "@app/types/UserType";
 
 export const sortChats = (firstChat: Chat_, secondChat: Chat_) => {
     return new Date(secondChat.last_message.created_at).getTime() - new Date(firstChat.last_message.created_at).getTime()
@@ -20,11 +21,10 @@ const updateChats = (event: NotificationWillDisplayEvent, chats: Chat_[], currUs
     message.content = event.notification.body;
     for (let i = 0; i < chats.length; ++i) {
         if (chats[i].public_id == message.chat) {
-            chats[i].last_message.content = message.content;
-            chats[i].last_message.created_at = message.created_at;
-            chats[i].last_message.edited_at = message.edited_at;
-            chats[i].last_message.is_read = message.is_read;
-            if (currUser.username != chats[i].last_message.sender) {
+            for (let param in message) {
+                chats[i].last_message[param] = message[param]
+            }
+            if (currUser.username != message.sender) {
                 chats[i].unread_messages_count += 1;
             }
             break;
@@ -40,8 +40,12 @@ const Chats = ({navigation}) => {
     useEffect(() => {
         axios.get(AppBaseURL + "chat/")
             .then((response) => {
-                if (!isAChatArray(response.data)) return
-                const sortedChats = response.data.sort(sortChats);
+                const results = response.data.results;
+                if (!isAChatArray(results)) {
+                    console.error(`Response has no chats, but instead: ${results}`);
+                    return
+                }
+                const sortedChats = results.sort(sortChats);
                 setChats(sortedChats);
             })
             .catch((e) => console.log(e));
@@ -75,6 +79,7 @@ const Chats = ({navigation}) => {
                           )
                       }}
                       keyExtractor={(item) => item.public_id}
+                      extraData={chats}
             />
         </View>
     )

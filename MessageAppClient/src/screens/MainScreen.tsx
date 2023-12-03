@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import Chats from "../components/chating/Chats";
 import Chat from "../components/chating/Chat"
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import {Chat_, Message} from "@app/components/chating/MessageType";
+import {Chat_} from "@app/types/ChatType";
 import {ChatProvider} from "@app/context/ChatContext";
 
 const Stack = createNativeStackNavigator();

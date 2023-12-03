@@ -1,0 +1,28 @@
+export interface Message {
+    public_id: string,
+    chat: string,
+    sender: string,
+    created_at: string,
+    is_read: boolean,
+    is_edited: boolean,
+    file?: string,
+    content?: string
+}
+
+export const isAMessage = (obj: any): obj is Message => {
+    return "public_id" in obj &&
+           "chat" in obj &&
+           "sender" in obj &&
+           "created_at" in obj &&
+           "is_edited" in obj &&
+           "is_read" in obj &&
+           "file" in obj &&
+           "content" in obj
+}
+
+export const isAMessageArray = (obj: any): obj is Message[] => {
+    for (let message of obj) {
+        if (!isAMessage(message)) return false
+    }
+    return true
+}

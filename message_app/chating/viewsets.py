@@ -51,8 +51,8 @@ class MessageViewSet(viewsets.ModelViewSet):
     lookup_field = "public_id"
 
     def get_queryset(self):
-        chat_id = self.request.query_params["chat_id"]
-        return Message.objects.filter(chat__public_id=chat_id).order_by("created_at")
+        chat_id = self.request.query_params.get("chat_id")
+        return Message.objects.filter(chat__public_id=chat_id)
 
     def create(self, request, *args, **kwargs):
         creation_data = {"content": request.data["content"], "chat": request.data["chat"],

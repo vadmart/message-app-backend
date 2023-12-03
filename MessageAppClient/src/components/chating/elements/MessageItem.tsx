@@ -1,5 +1,5 @@
 import {View, Text, StyleSheet} from "react-native"
-import { Message } from "../MessageType";
+import { Message } from "../../../types/MessageType";
 import { toReadableDate, toReadableTime } from "../helpers/chatDatetime";
 import {useAuth} from "@app/context/AuthContext";
 

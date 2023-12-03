@@ -10,7 +10,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ["public_id", "sender", "chat", "content", "created_at", "edited_at", "is_read"]
+        exclude = ["id", "edited_at"]
         # read_only_fields = ["public_id", "created_at", "edited_at"]
 
     def to_representation(self, instance):

@@ -35,7 +35,7 @@ class OneSignalPushNotifications:
                                    "file": message.file.name}
         print("Include_aliases:", subscription_ids)
         res = requests.post(self.BASE_URL, json=current_payload, headers=self.headers)
-        print(res.content)
+        print(res)
 
     def send_notification(self, user: User, content: dict) -> None:
         current_payload = deepcopy(self.payload)

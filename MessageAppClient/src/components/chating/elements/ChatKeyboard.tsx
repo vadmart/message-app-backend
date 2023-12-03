@@ -49,7 +49,7 @@ export function ChatKeyboard({chatData=null, userData=null}) {
                         onPress={createMessage}
                         disabled={(!inputtedData)}
                         style={{padding: 3}}>
-            <Image style={styles.sendButtonIcon} source={require("../../../../assets/chat-icons/convert.png")} resizeMethod={"resize"} />
+                <Image style={styles.sendButtonIcon} source={require("@img/chat-icons/convert.png")} resizeMethod={"resize"} />
             </Pressable>
             </View>
         </>

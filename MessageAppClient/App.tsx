@@ -16,7 +16,7 @@ import MainScreen from '@app/screens/MainScreen';
 // @ts-ignore
 import ScreenNames from '@app/config';
 // @ts-ignore
-import {AuthProvider, useAuth} from "./src/context/AuthContext";
+import {AuthProvider, useAuth} from "@app/context/AuthContext";
 // # TODO: fix ts-ignore
 
 

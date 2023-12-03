@@ -1,26 +1,73 @@
 import React, {useEffect, useState, useRef} from "react"
-import { OneSignal } from "react-native-onesignal";
-import { View, StyleSheet, FlatList } from "react-native";
-import { AppBaseURL } from "@app/config";
+import {OneSignal} from "react-native-onesignal";
+import {View, StyleSheet, FlatList} from "react-native";
+import {AppBaseURL} from "@app/config";
 import axios from 'axios';
-import {Message, Chat_, isAMessage, isAMessageArray} from "@app/components/chating/MessageType";
-import { User } from "@app/components/chating/UserType";
-import { ChatKeyboard } from "@app/components/chating/elements/ChatKeyboard";
+import {Message, isAMessage} from "@app/types/MessageType";
+import {Chat_} from "@app/types/ChatType";
+import {User} from "@app/types/UserType";
+import {ChatKeyboard} from "@app/components/chating/elements/ChatKeyboard";
 import MessageItem from "./elements/MessageItem";
 import {useAuth} from "@app/context/AuthContext";
 import {useChat} from "@app/context/ChatContext";
 
-
+const markMessageAsRead = async (message_id: string) => {
+    try {
+        const response = await axios.post(AppBaseURL + `message/${message_id}/read/`);
+        console.log(`Message ${message_id} was marked as read`);
+        return response
+    } catch (e) {
+        console.error(`Message was not marked as read due to error: ${e}`);
+    }
+}
 
 const Chat = ({route, navigation}) => {
     console.log("Rendering Chat");
-    const messageListElem = useRef(null);
+    const messageList = useRef(null);
     const {chats, setChats} = useChat();
     const [messages, setMessages] = useState<Message[]>(null);
     const {authState} = useAuth();
-    const {userData,
+    const {
+        userData,
         chatData,
-        title}: {userData: User, chatData: Chat_, title: string} = route.params;
+        title
+    }: { userData: User, chatData: Chat_, title: string } = route.params;
+    const [responseMessagesData, setResponseMessagesData] =
+        useState<{
+            count: number,
+            next: string,
+            previous: string,
+            results: Message[]
+        }>({count: null, next: null, previous: null, results: null});
+    const renderItem = (props) => <MessageItem index={props.index} messages={messages}/>;
+    const keyExtractor = item => item.public_id;
+    const [isRefresh, setIsRefresh] = useState(false);
+
+
+    const sortMessages = (firstMessage: Message, secondMessage: Message) => {
+        return new Date(firstMessage.created_at).getTime() - new Date(secondMessage.created_at).getTime();
+    }
+
+    const onRefresh = () => {
+        console.log(responseMessagesData.next);
+        setIsRefresh(true);
+        if (responseMessagesData.next) {
+            axios.get(responseMessagesData.next)
+                .then((response) => {
+                    ({
+                        results: responseMessagesData.results,
+                        previous: responseMessagesData.previous, next: responseMessagesData.next,
+                        count: responseMessagesData.count
+                    } = response.data);
+                    setMessages(() => {
+                        const sortedMessages = responseMessagesData.results.sort(sortMessages);
+                        return [...sortedMessages, ...messages]
+                    });
+                })
+                .catch((e) => console.error(e.response.data));
+        }
+        setIsRefresh(false);
+    }
 
     useEffect(() => {
         console.log("Start useEffect in Chat");
@@ -31,34 +78,32 @@ const Chat = ({route, navigation}) => {
         })
         // if we have only user data and no chat data, we won't receive messages, because they obviously don't exist
         if (!chatData) return;
-        axios.get(AppBaseURL + `message/?chat_id=${chatData.public_id}`)
+        axios.get(AppBaseURL + `message/?chat_id=${chatData.public_id}&limit=20`)
             .then((response) => {
-                if (!isAMessageArray(response.data)) {
-                    console.error("Response is not an array of messages!");
-                    return
-                }
-                for (let message of response.data) {
+                ({
+                    results: responseMessagesData.results,
+                    previous: responseMessagesData.previous, next: responseMessagesData.next,
+                    count: responseMessagesData.count
+                } = response.data);
+                for (let message of responseMessagesData.results) {
                     // if it is a message from another user, and it's not read, we mark it as read
                     if (authState.user.username != message.sender && !message.is_read) {
                         for (let chat of chats) {
                             if (chat.public_id == message.chat) {
                                 chat.unread_messages_count -= 1;
                                 setChats(() => [...chats]);
+                                markMessageAsRead(message.public_id);
+                                break;
                             }
                         }
-                        axios.post(AppBaseURL + `message/${message.public_id}/read/`)
-                            .then((resp) => console.log(resp.data))
-                            .catch((err) => console.warn(err))
                     }
                 }
-            setMessages(response.data);
-            messageListElem.current?.scrollToEnd();
-            console.log("Adding foregroundEventListener");
-
-        })
-        .catch((e) => {
-            console.log(e);
-        })
+                setMessages(responseMessagesData.results.sort(sortMessages));
+                messageList.current?.scrollToEnd({animating: true});
+            })
+            .catch((e) => {
+                console.log(e);
+            })
 
         console.log("End useEffect in Chat");
 
@@ -66,35 +111,40 @@ const Chat = ({route, navigation}) => {
     }, [])
 
     useEffect(() => {
-        const handleEventForegroundForChat = (e) => {
-                e.preventDefault();
-                if (!messages || !isAMessage(e.notification.additionalData)) return
-                const message = e.notification.additionalData;
-                message.content = e.notification.body;
-                setMessages(() => [...messages, message]);
-                messageListElem.current?.scrollToEnd();
+        const onForegroundWillDisplay = (e) => {
+            e.preventDefault();
+            if (!messages || !isAMessage(e.notification.additionalData)) return
+            const message: Message = e.notification.additionalData;
+            message.content = e.notification.body;
+            setMessages(() => [...messages, message]);
+            for (let chat of chats) {
+                if (chat.public_id == message.chat) {
+                    chat.last_message = message;
+                    setChats(() => [...chats]);
+                    return;
+                }
             }
-
-        OneSignal.Notifications.addEventListener("foregroundWillDisplay", handleEventForegroundForChat);
+            messageList.current?.scrollToEnd();
+        }
+        console.log("Adding Chat event listener");
+        OneSignal.Notifications.addEventListener("foregroundWillDisplay", onForegroundWillDisplay);
         return () => {
             console.log("Removing Chat event listener");
-            OneSignal.Notifications.removeEventListener("foregroundWillDisplay", handleEventForegroundForChat);
+            OneSignal.Notifications.removeEventListener("foregroundWillDisplay", onForegroundWillDisplay);
         }
     }, [chats]);
 
     return (
         <View style={styles.container}>
             <FlatList
-                style={{paddingTop: 10}}
+                style={styles.messageList}
                 data={messages}
-                ref={messageListElem}
-                renderItem={(props) => {
-                    return <MessageItem index={props.index} messages={messages}/>
-                }}
-                keyExtractor={(item) => {
-                    return item.public_id
-                }}
-                removeClippedSubviews={true}
+                ref={messageList}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                initialNumToRender={20}
+                onRefresh={onRefresh}
+                refreshing={isRefresh}
             />
             <View style={styles.footer}>
                 <ChatKeyboard userData={userData} chatData={chatData}/>
@@ -107,6 +157,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#007767"
+    },
+    messageList: {
+        flex: 1,
+        paddingTop: 10,
     },
     footer: {
         backgroundColor: "#FFFFFF",

@@ -4,7 +4,7 @@ import {AppBaseURL} from "@app/config";
 import axios from "axios";
 import {BaseURL} from "@app/components/AccountForm/Login/BaseURL";
 import {OneSignal} from "react-native-onesignal";
-import {User} from "@app/components/chating/UserType"
+import {User} from "@app/types/UserType"
 
 export interface AuthState {
     access: string | null,
