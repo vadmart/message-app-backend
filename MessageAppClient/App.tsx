@@ -22,25 +22,6 @@ import {AuthProvider, useAuth} from "@app/context/AuthContext";
 
 const Stack = createNativeStackNavigator();
 
-type State = {
-    isLoading: boolean,
-    isSignout: boolean,
-    auth: Auth
-}
-
-type Action = {
-    type: string
-    auth?: Auth
-}
-
-const SplashScreen = () => {
-    return (
-        <View>
-            <Text>Loading...</Text>
-        </View>
-    )
-}
-
 function App() {
 
     return (

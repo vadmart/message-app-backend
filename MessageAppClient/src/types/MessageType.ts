@@ -1,7 +1,9 @@
+import {User} from "@app/types/UserType";
+
 export interface Message {
     public_id: string,
     chat: string,
-    sender: string,
+    sender: User,
     created_at: string,
     is_read: boolean,
     is_edited: boolean,
@@ -16,7 +18,6 @@ export const isAMessage = (obj: any): obj is Message => {
            "created_at" in obj &&
            "is_edited" in obj &&
            "is_read" in obj &&
-           "file" in obj &&
            "content" in obj
 }
 

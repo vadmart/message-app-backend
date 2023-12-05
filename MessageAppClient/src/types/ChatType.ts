@@ -1,9 +1,10 @@
 import {Message} from "@app/types/MessageType";
+import {User} from "@app/types/UserType";
 
 export interface Chat_ {
     created_at: string,
-    first_user: string,
-    second_user: string,
+    first_user: User,
+    second_user: User,
     last_message: Message,
     public_id: string,
     unread_messages_count: number

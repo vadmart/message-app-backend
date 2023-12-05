@@ -5,11 +5,10 @@ from rest_framework.response import Response
 from message_app.chating.models import Message, Chat
 from message_app.auth.user.models import User
 from message_app.chating.serializers import MessageSerializer, ChatSerializer
-from message_app.chating.push import OneSignalPushNotifications
+from message_app.chating import OneSignal
 from django.db.models import Q
 from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404, redirect
-from rest_framework.reverse import reverse
+from django.shortcuts import get_object_or_404
 
 
 class ChatViewSet(viewsets.ModelViewSet):
@@ -21,12 +20,11 @@ class ChatViewSet(viewsets.ModelViewSet):
         return Chat.objects.filter(Q(first_user=self.request.user) | Q(second_user=self.request.user))
 
     def create(self, request, *args, **kwargs):
-        data = {**request.data, "first_user": request.user.username}
-        serializer = self.get_serializer(data=data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        chat = serializer.save()
-        message = Message.objects.create(chat=chat, sender=request.user, content=data["content"])
-        OneSignalPushNotifications().send_push_message(message=message)
+        serializer.save(**request.data)
+        # message = Message.objects.create(chat=chat, sender=request.user, content=data["content"])
+        # OneSignal.Notifications.send_push_message(message=message)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False)
@@ -55,12 +53,10 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Message.objects.filter(chat__public_id=chat_id)
 
     def create(self, request, *args, **kwargs):
-        creation_data = {"content": request.data["content"], "chat": request.data["chat"],
-                         "sender": request.user.public_id}
-        serializer = self.get_serializer(data=creation_data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
-        OneSignalPushNotifications().send_push_message(message=message)
+        OneSignal.Notifications.send_push_message(message=message)
         headers = self.get_success_headers(serializer.data)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

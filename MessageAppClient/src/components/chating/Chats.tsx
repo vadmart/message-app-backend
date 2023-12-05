@@ -24,7 +24,7 @@ const updateChats = (event: NotificationWillDisplayEvent, chats: Chat_[], currUs
             for (let param in message) {
                 chats[i].last_message[param] = message[param]
             }
-            if (currUser.username != message.sender) {
+            if (currUser.username != message.sender.username) {
                 chats[i].unread_messages_count += 1;
             }
             break;
@@ -58,11 +58,8 @@ const Chats = ({navigation}) => {
             updateChats(e, chats, authState.user);
             setChats(() => [...chats]);
         };
-
         OneSignal.Notifications.addEventListener("foregroundWillDisplay", handleEventForegroundForChats);
-
         return () => {
-            console.log("Removing Chats event listener")
             OneSignal.Notifications.removeEventListener("foregroundWillDisplay", handleEventForegroundForChats);
         }
     }, [chats]);

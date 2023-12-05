@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef} from "react"
 import {OneSignal} from "react-native-onesignal";
-import {View, StyleSheet, FlatList} from "react-native";
+import {View, StyleSheet, FlatList, ListRenderItem} from "react-native";
 import {AppBaseURL} from "@app/config";
 import axios from 'axios';
 import {Message, isAMessage} from "@app/types/MessageType";
@@ -23,7 +23,7 @@ const markMessageAsRead = async (message_id: string) => {
 
 const Chat = ({route, navigation}) => {
     console.log("Rendering Chat");
-    const messageList = useRef(null);
+    const messageListRef = useRef(null);
     const {chats, setChats} = useChat();
     const [messages, setMessages] = useState<Message[]>(null);
     const {authState} = useAuth();
@@ -39,7 +39,6 @@ const Chat = ({route, navigation}) => {
             previous: string,
             results: Message[]
         }>({count: null, next: null, previous: null, results: null});
-    const renderItem = (props) => <MessageItem index={props.index} messages={messages}/>;
     const keyExtractor = item => item.public_id;
     const [isRefresh, setIsRefresh] = useState(false);
 
@@ -48,8 +47,12 @@ const Chat = ({route, navigation}) => {
         return new Date(firstMessage.created_at).getTime() - new Date(secondMessage.created_at).getTime();
     }
 
+    const renderMessage = (props) => {
+        return <MessageItem index={props.index} messages={messages} item={props.item}/>
+    }
+
     const onRefresh = () => {
-        console.log(responseMessagesData.next);
+        // console.log(responseMessagesData.next);
         setIsRefresh(true);
         if (responseMessagesData.next) {
             axios.get(responseMessagesData.next)
@@ -85,11 +88,13 @@ const Chat = ({route, navigation}) => {
                     previous: responseMessagesData.previous, next: responseMessagesData.next,
                     count: responseMessagesData.count
                 } = response.data);
+                setMessages(responseMessagesData.results.sort(sortMessages));
+                messageListRef.current?.scrollToEnd({animating: true});
                 for (let message of responseMessagesData.results) {
                     // if it is a message from another user, and it's not read, we mark it as read
-                    if (authState.user.username != message.sender && !message.is_read) {
+                    if (authState.user.username != message.sender.username && !message.is_read) {
                         for (let chat of chats) {
-                            if (chat.public_id == message.chat) {
+                            if (chat.public_id == message.chat && chat.unread_messages_count > 0) {
                                 chat.unread_messages_count -= 1;
                                 setChats(() => [...chats]);
                                 markMessageAsRead(message.public_id);
@@ -98,25 +103,27 @@ const Chat = ({route, navigation}) => {
                         }
                     }
                 }
-                setMessages(responseMessagesData.results.sort(sortMessages));
-                messageList.current?.scrollToEnd({animating: true});
             })
             .catch((e) => {
                 console.log(e);
             })
 
         console.log("End useEffect in Chat");
-
-
     }, [])
 
     useEffect(() => {
         const onForegroundWillDisplay = (e) => {
             e.preventDefault();
-            if (!messages || !isAMessage(e.notification.additionalData)) return
-            const message: Message = e.notification.additionalData;
+            if (!messages) return;
+            const message  = e.notification.additionalData;
             message.content = e.notification.body;
-            setMessages(() => [...messages, message]);
+            if (!isAMessage(message)) {
+                console.log("We've got an incorrect message: ");
+                console.log(message);
+                return;
+            }
+            console.log("We've got a message:");
+            console.log(message);
             for (let chat of chats) {
                 if (chat.public_id == message.chat) {
                     chat.last_message = message;
@@ -124,25 +131,27 @@ const Chat = ({route, navigation}) => {
                     return;
                 }
             }
-            messageList.current?.scrollToEnd();
+            setMessages(() => [...messages, message]);
+            messageListRef.current?.scrollToEnd();
+            console.log("--------------Current messages--------------")
         }
         console.log("Adding Chat event listener");
         OneSignal.Notifications.addEventListener("foregroundWillDisplay", onForegroundWillDisplay);
         return () => {
             console.log("Removing Chat event listener");
-            OneSignal.Notifications.removeEventListener("foregroundWillDisplay", onForegroundWillDisplay);
+            OneSignal.Notifications.removeEventListener("foregroundWillDisplay", onForegroundWillDisplay)
         }
     }, [chats]);
+
 
     return (
         <View style={styles.container}>
             <FlatList
                 style={styles.messageList}
                 data={messages}
-                ref={messageList}
-                renderItem={renderItem}
+                ref={messageListRef}
+                renderItem={renderMessage}
                 keyExtractor={keyExtractor}
-                initialNumToRender={20}
                 onRefresh={onRefresh}
                 refreshing={isRefresh}
             />

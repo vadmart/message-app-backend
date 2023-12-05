@@ -1,11 +1,12 @@
 import {View, Text, StyleSheet} from "react-native"
-import { Message } from "../../../types/MessageType";
-import { toReadableDate, toReadableTime } from "../helpers/chatDatetime";
-import {useAuth} from "@app/context/AuthContext";
+import { Message } from "@app/types/MessageType";
+import { toReadableDate, toReadableTime } from "@app/components/chating/helpers/chatDatetime";
+import Avatar from "@app/components/chating/elements/Avatar";
+import React from "react";
 
-const MessageItem = ({index, messages}: {index: number, messages: readonly Message[]}) => {
-    const {authState} = useAuth();
-    const currentDateTime = new Date(messages[index].created_at);
+const MessageItem = (props) => {
+    const {index, messages, item}: {index: number, messages: Message[], item: Message} = props;
+    const currentDateTime = new Date(item.created_at);
     const previousDate = (index > 0) && new Date(messages[index - 1].created_at).getDate(); 
     const nextDate = (index < messages.length - 1) && new Date(messages[index + 1].created_at).getDate();
     const nextSender = (index < messages.length - 1) && messages[index + 1].sender;
@@ -18,16 +19,14 @@ const MessageItem = ({index, messages}: {index: number, messages: readonly Messa
                 </View>
             </View> : null}
             <View style={styles.messageBlock}>
-                <View style={styles.avatarBlock}>
-                    {(currentDateTime.getDate() !== nextDate || messages[index].sender !== nextSender) ? 
-                    <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>{messages[index].sender[0]}</Text>
-                    </View> : null}
+                <View style={styles.leftBlock}>
+                    {(currentDateTime.getDate() !== nextDate || item.sender.username !== nextSender.username) ?
+                    <Avatar user={item.sender}/> : null}
                 </View>
                 <View style={styles.rightBlock}>
                     <View style={styles.contentTimeBlock}>
                         <View style={styles.contentBlock}>
-                            <Text style={styles.content}>{messages[index].content}</Text>
+                            <Text style={styles.content}>{item.content}</Text>
                         </View>
                         <View style={styles.timeBlock}>
                             <Text style={styles.time}>{toReadableTime(currentDateTime)}</Text>
@@ -44,21 +43,10 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         flexDirection: "row"
     },
-    avatarBlock: {
+    leftBlock: {
         flex: 0.15,
         justifyContent: "flex-end",
         alignItems: "center"
-    },
-    avatar: {
-        backgroundColor: "#D9D9D9",
-        height: 35,
-        borderRadius: 50,
-        aspectRatio: 1,
-        justifyContent: "center",
-        alignItems: "center"
-    },
-    avatarText: {
-        fontSize: 20
     },
     rightBlock: {
         flex: 0.8,

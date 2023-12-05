@@ -2,20 +2,24 @@ import {Pressable, StyleSheet, Text, View} from "react-native";
 import {toReadableDateTime} from "@app/components/chating/helpers/chatDatetime";
 import {useAuth} from "@app/context/AuthContext";
 import React from "react";
+import Avatar from "@app/components/chating/elements/Avatar";
+import {Chat_} from "@app/types/ChatType";
 
 
-const ChatItem = ({item, navigation}) => {
+const ChatItem = ({item, navigation}: {item: Chat_, navigation: any}) => {
     const user = useAuth().authState.user;
-    const companion = (item.first_user == user.username) ? item.second_user : item.first_user
-
+    const companion = (item.first_user.username == user.username) ? item.second_user : item.first_user;
     return (
         <Pressable style={styles.message} onPress={(e) => {
             navigation.navigate("Chat", {chatData: item, title: companion});
         }
         }>
+            <View style={styles.avatarBlock}>
+                <Avatar user={companion} />
+            </View>
             <View style={styles.senderTextBlock}>
                 <Text
-                    style={styles.messageSender}>{companion}</Text>
+                    style={styles.messageSender}>{companion.username}</Text>
                 <Text style={styles.messageText}>{item.last_message.content}</Text>
             </View>
             {item.unread_messages_count != 0 && <View style={styles.unreadCounter}>
@@ -36,6 +40,10 @@ const styles = StyleSheet.create({
         paddingLeft: 5,
         paddingVertical: 10,
         justifyContent: "space-between"
+    },
+    avatarBlock: {
+        justifyContent: "center",
+        paddingLeft: 5
     },
     senderTextBlock: {
         flex: 0.7

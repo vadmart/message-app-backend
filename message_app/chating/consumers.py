@@ -4,7 +4,7 @@ from django.db.models import QuerySet
 
 from message_app.auth.user.models import User
 import json
-from message_app.chating.push import OneSignalPushNotifications
+from message_app.chating.OneSignal import Notifications as OneSignalPushNotifications
 from channels.db import database_sync_to_async
 
 from message_app.chating.models import Message, Chat
