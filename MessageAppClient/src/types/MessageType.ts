@@ -1,14 +1,16 @@
 import {User} from "@app/types/UserType";
 
-export interface Message {
+export interface MessageInfo {
     public_id: string,
     chat: string,
     sender: User,
     created_at: string,
     is_read: boolean,
     is_edited: boolean,
+}
+export interface Message extends MessageInfo {
+    content: string
     file?: string,
-    content?: string
 }
 
 export const isAMessage = (obj: any): obj is Message => {

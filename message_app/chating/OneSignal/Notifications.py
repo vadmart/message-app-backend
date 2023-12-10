@@ -37,6 +37,7 @@ def send_push_message(message: Message) -> None:
                         json=payload,
                         headers=headers)
     print(res)
+    print(res.content)
 
 
 def send_notification(self, user: User, content: dict) -> None:

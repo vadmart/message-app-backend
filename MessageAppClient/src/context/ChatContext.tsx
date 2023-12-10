@@ -1,5 +1,5 @@
 import React, {createContext, useContext} from "react";
-import {Chat_} from "@app/types/MessageType";
+import {Chat_} from "@app/types/ChatType";
 
 const ChatContext = createContext<{
     chats?: Chat_[],

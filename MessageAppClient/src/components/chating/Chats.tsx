@@ -51,18 +51,20 @@ const Chats = ({navigation}) => {
             .catch((e) => console.log(e));
     }, [])
 
-    useEffect(() => {
-        const handleEventForegroundForChats = (e) => {
-            e.preventDefault();
-            if (!chats) return;
-            updateChats(e, chats, authState.user);
-            setChats(() => [...chats]);
-        };
-        OneSignal.Notifications.addEventListener("foregroundWillDisplay", handleEventForegroundForChats);
-        return () => {
-            OneSignal.Notifications.removeEventListener("foregroundWillDisplay", handleEventForegroundForChats);
-        }
-    }, [chats]);
+    // useEffect(() => {
+    //     const handleEventForegroundForChats = (e) => {
+    //         e.preventDefault();
+    //         if (!chats) return;
+    //         updateChats(e, chats, authState.user);
+    //         setChats(() => [...chats]);
+    //     };
+    //     console.log("Adding Chats event listener");
+    //     OneSignal.Notifications.addEventListener("foregroundWillDisplay", handleEventForegroundForChats);
+    //     return () => {
+    //         console.log("Removing Chats event listener");
+    //         OneSignal.Notifications.removeEventListener("foregroundWillDisplay", handleEventForegroundForChats);
+    //     }
+    // }, [chats]);
 
     return (
         <View style={styles.container}>

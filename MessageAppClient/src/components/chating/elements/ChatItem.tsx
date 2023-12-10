@@ -9,9 +9,10 @@ import {Chat_} from "@app/types/ChatType";
 const ChatItem = ({item, navigation}: {item: Chat_, navigation: any}) => {
     const user = useAuth().authState.user;
     const companion = (item.first_user.username == user.username) ? item.second_user : item.first_user;
+    // [item.first_user, item.second_user] = [JSON.stringify(item.first_user), JSON.stringify(item.second_user)]
     return (
         <Pressable style={styles.message} onPress={(e) => {
-            navigation.navigate("Chat", {chatData: item, title: companion});
+            navigation.navigate("Chat", {chatData: item, title: companion.username});
         }
         }>
             <View style={styles.avatarBlock}>
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
         paddingLeft: 5
     },
     senderTextBlock: {
-        flex: 0.7
+        flex: 0.65
     },
     messageSender: {
         fontSize: 20,
@@ -66,7 +67,7 @@ const styles = StyleSheet.create({
         fontWeight: "bold"
     },
     dateTimeBlock: {
-        flex: 0.2,
+        flex: 0.25,
         justifyContent: "center",
         alignItems: "center"
     },
