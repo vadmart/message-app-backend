@@ -23,6 +23,7 @@ django-cors-headers = "^4.2.0"
 django = "^4.2.5"
 mypy = "^1.5.1"
 gunicorn = "^21.2.0"
+onesignal-python-api = "^2.0.2"
 
 
 [build-system]

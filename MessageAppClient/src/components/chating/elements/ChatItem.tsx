@@ -1,5 +1,5 @@
 import {Pressable, StyleSheet, Text, View} from "react-native";
-import {toReadableDateTime} from "@app/components/chating/helpers/chatDatetime";
+import {toReadableDateTime} from "@app/components/helpers/chatDatetime";
 import {useAuth} from "@app/context/AuthContext";
 import React from "react";
 import Avatar from "@app/components/chating/elements/Avatar";

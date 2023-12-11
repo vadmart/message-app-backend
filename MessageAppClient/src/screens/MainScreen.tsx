@@ -7,6 +7,7 @@ import {ChatProvider} from "@app/context/ChatContext";
 import {OneSignal, NotificationWillDisplayEvent} from "react-native-onesignal";
 import {isAMessage, Message} from "@app/types/MessageType";
 import {useAuth} from "@app/context/AuthContext";
+import {sortChats} from "@app/components/helpers/sort";
 
 const Stack = createNativeStackNavigator();
 
@@ -32,7 +33,7 @@ const MainScreen = () => {
             for (let i = chats.length - 1; i >= 0; --i) {
                 if (chats[i].public_id == message.chat) {
                     for (let param in message) {
-                        chats[i].last_message[param] = message[param]
+                        chats[i].last_message[param] = message[param];
                     }
                     if (authState.user.username != message.sender.username) {
                         chats[i].unread_messages_count += 1;
@@ -40,6 +41,7 @@ const MainScreen = () => {
                     break;
                 }
             }
+            chats.sort(sortChats);
             setChats(() => [...chats]);
 
             if (!messages) return;

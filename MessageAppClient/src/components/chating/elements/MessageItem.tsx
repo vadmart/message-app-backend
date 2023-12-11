@@ -1,6 +1,6 @@
 import {View, Text, StyleSheet} from "react-native"
 import { Message } from "@app/types/MessageType";
-import { toReadableDate, toReadableTime } from "@app/components/chating/helpers/chatDatetime";
+import { toReadableDate, toReadableTime } from "@app/components/helpers/chatDatetime";
 import Avatar from "@app/components/chating/elements/Avatar";
 import React from "react";
 

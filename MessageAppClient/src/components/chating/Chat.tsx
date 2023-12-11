@@ -114,38 +114,6 @@ const Chat = ({route, navigation}) => {
         console.log("End useEffect in Chat");
     }, [])
 
-    // useEffect(() => {
-    //     const onForegroundWillDisplay = (e) => {
-    //         e.preventDefault();
-    //         if (!messages) return;
-    //         const message  = e.notification.additionalData;
-    //         message.content = e.notification.body;
-    //         if (!isAMessage(message)) {
-    //             console.log("We've got an incorrect message: ");
-    //             console.log(message);
-    //             return;
-    //         }
-    //         console.log("We've got a message:");
-    //         console.log(message);
-    //         for (let chat of chats) {
-    //             if (chat.public_id == message.chat) {
-    //                 chat.last_message = message;
-    //                 setChats(() => [...chats]);
-    //                 return;
-    //             }
-    //         }
-    //         setMessages(() => [...messages, message]);
-    //         messageListRef.current?.scrollToEnd();
-    //         console.log("--------------Current messages--------------")
-    //     }
-    //     console.log("Adding Chat event listener");
-    //     OneSignal.Notifications.addEventListener("foregroundWillDisplay", onForegroundWillDisplay);
-    //     return () => {
-    //         console.log("Removing Chat event listener");
-    //         OneSignal.Notifications.removeEventListener("foregroundWillDisplay", onForegroundWillDisplay)
-    //     }
-    // }, [chats]);
-
 
     return (
         <View style={styles.container}>

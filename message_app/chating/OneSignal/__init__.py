@@ -1,1 +1,1 @@
-from . import Notifications
+from . import Push
