@@ -13,18 +13,22 @@ const Stack = createNativeStackNavigator();
 const MainScreen = () => {
     console.log("Rendering MainScreen");
     const [chats, setChats] = useState<Chat_[]>([]);
-    const chatsState = {chats, setChats};
+    const [messages, setMessages] = useState<Message[]>();
+    const chatsState = {chats, setChats, messages, setMessages};
     const {authState} = useAuth();
     console.log("MainScreen: Chats: ");
     console.log(chats);
+    console.log("MainScreen: Messages: ");
+    console.log(messages);
     useEffect(() => {
-        if (!chats) return;
         const notificationsListener = (e: NotificationWillDisplayEvent) => {
             console.log("Incoming notification...");
+            if (!chats) return;
             const message= Object.assign(e.notification.additionalData, {content: e.notification.body});
             if (!isAMessage(message)) return;
             console.log("Incoming message: ");
             console.log(message)
+
             for (let i = chats.length - 1; i >= 0; --i) {
                 if (chats[i].public_id == message.chat) {
                     for (let param in message) {
@@ -36,14 +40,17 @@ const MainScreen = () => {
                     break;
                 }
             }
-            setChats(() => [...chats])
+            setChats(() => [...chats]);
+
+            if (!messages) return;
+            setMessages(() => [...messages, message]);
         }
 
         OneSignal.Notifications.addEventListener("foregroundWillDisplay", notificationsListener);
         return () => {
             OneSignal.Notifications.removeEventListener("foregroundWillDisplay", notificationsListener)
         }
-    }, [chats]);
+    }, [chats, messages]);
 
     return (
         <ChatProvider value={chatsState}>

@@ -24,8 +24,10 @@ const markMessageAsRead = async (message_id: string) => {
 const Chat = ({route, navigation}) => {
     console.log("Rendering Chat");
     const messageListRef = useRef(null);
-    const {chats, setChats} = useChat();
-    const [messages, setMessages] = useState<Message[]>(null);
+    const {chats,
+           setChats,
+           messages,
+           setMessages} = useChat();
     const {authState} = useAuth();
     const {
         userData,
@@ -59,13 +61,14 @@ const Chat = ({route, navigation}) => {
                 .then((response) => {
                     ({
                         results: responseMessagesData.results,
-                        previous: responseMessagesData.previous, next: responseMessagesData.next,
+                        previous: responseMessagesData.previous,
+                        next: responseMessagesData.next,
                         count: responseMessagesData.count
                     } = response.data);
-                    setMessages(() => {
+                    setMessages((() => {
                         const sortedMessages = responseMessagesData.results.sort(sortMessages);
                         return [...sortedMessages, ...messages]
-                    });
+                    })());
                 })
                 .catch((e) => console.error(e.response.data));
         }

@@ -3,8 +3,10 @@ from copy import deepcopy
 from typing import Any
 from .__config import BASE_URL
 import requests
-from message_app.chating.models import Message, User
+from message_app.chating.models import User, Chat
 import logging
+from message_app.auth.user.serializers import UserSerializer
+from message_app.chating.serializers import MessageSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -16,22 +18,17 @@ headers: dict[str, str] = {
 }
 
 
-def send_push_message(message: Message) -> None:
+def send_push_message(ms: MessageSerializer) -> None:
     payload: dict[str, Any] = {
         "app_id": "f3536252-f32f-4823-9115-18b1597b3b1a",
         "target_channel": "push"
     }
-    subscription_ids = [str(message.chat.first_user.public_id), str(message.chat.second_user.public_id)]
+    chat = Chat.objects.get(public_id=ms.data["chat"])
+    subscription_ids = [str(chat.first_user.public_id), str(chat.second_user.public_id)]
     payload["include_aliases"] = {"external_id": subscription_ids}
-    payload["contents"] = {"en": message.content}
-    payload["headings"] = {"en": message.sender.username}
-    payload["data"] = {"public_id": str(message.public_id),
-                       "chat": str(message.chat.public_id),
-                       "sender": message.sender.username,
-                       "created_at": str(message.created_at),
-                       "is_edited": message.is_edited,
-                       "is_read": message.is_read,
-                       "file": message.file.name}
+    payload["contents"] = {"en": ms.data["content"]}
+    payload["headings"] = {"en": ms.data["sender"]["username"]}
+    payload["data"] = {**ms.data, "chat": str(ms.data["chat"]), "content": None}
     print("Include_aliases:", subscription_ids)
     res = requests.post(NOTIFICATIONS_URL,
                         json=payload,

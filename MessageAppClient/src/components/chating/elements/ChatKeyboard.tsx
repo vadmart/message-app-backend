@@ -15,6 +15,7 @@ export function ChatKeyboard({chatData=null, userData=null}) {
                 "content": inputtedData
             }).then((response) => {
                 console.log(response.data);
+                setInputtedData("");
                 inputFieldRef.current.clear();
             })
             .catch((reason) => {
@@ -27,6 +28,7 @@ export function ChatKeyboard({chatData=null, userData=null}) {
                 "content": inputtedData
             }).then((response) => {
                 chatData = response.data;
+                setInputtedData("");
                 console.log(chatData)
                 inputFieldRef.current.clear();
             })

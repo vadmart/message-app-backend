@@ -55,8 +55,8 @@ class MessageViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        message = serializer.save()
-        OneSignal.Notifications.send_push_message(message=message)
+        self.perform_create(serializer)
+        OneSignal.Notifications.send_push_message(ms=serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
