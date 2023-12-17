@@ -19,12 +19,16 @@ class ChatViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Chat.objects.filter(Q(first_user=self.request.user) | Q(second_user=self.request.user))
 
+    # TODO: rethink logic of creating message after chat's creating
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        if not request.data.get("content") and not request.data.get("second_user"):
+            return Response("You cannot create chat without creating message", status=status.HTTP_400_BAD_REQUEST)
+        second_user = User.objects.get(username=request.data.get("second_user"))
+        serializer = self.get_serializer(data={"second_user": second_user})
         serializer.is_valid(raise_exception=True)
-        serializer.save(**request.data)
-        # message = Message.objects.create(chat=chat, sender=request.user, content=data["content"])
-        # OneSignal.Notifications.send_push_message(message=message)
+        chat = serializer.save(second_user=second_user)
+        Message.objects.create(chat=chat, sender=request.user, content=request.data.get("content"))
+        OneSignal.Push.create_chat_notification(cs=serializer)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False)
@@ -56,7 +60,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        OneSignal.Push.create_notification(ms=serializer)
+        OneSignal.Push.create_message_notification(ms=serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

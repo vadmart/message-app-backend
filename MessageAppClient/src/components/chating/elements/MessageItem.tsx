@@ -7,20 +7,23 @@ import React from "react";
 const MessageItem = (props) => {
     const {index, messages, item}: {index: number, messages: Message[], item: Message} = props;
     const currentDateTime = new Date(item.created_at);
-    const previousDate = (index > 0) && new Date(messages[index - 1].created_at).getDate(); 
-    const nextDate = (index < messages.length - 1) && new Date(messages[index + 1].created_at).getDate();
+    const previousDateTime = (index > 0) ? new Date(messages[index - 1].created_at) : new Date(-100);
+    const nextDateTime = (index < messages.length - 1) ? new Date(messages[index + 1].created_at) : new Date(-100);
     const nextSender = (index < messages.length - 1) && messages[index + 1].sender;
     return (
         <View>
-            {(currentDateTime.getDate() !== previousDate) ?
+            {(currentDateTime.getDate() !== previousDateTime.getDate() ||
+                    currentDateTime.getMonth() !== previousDateTime.getMonth()) &&
             <View style={styles.dateBlock}>
                 <View style={styles.date}>
                     <Text style={styles.dateText}>{toReadableDate(currentDateTime)}</Text>
                 </View>
-            </View> : null}
+            </View>}
             <View style={styles.messageBlock}>
                 <View style={styles.leftBlock}>
-                    {(currentDateTime.getDate() !== nextDate || item.sender.username !== nextSender.username) ?
+                    {((currentDateTime.getDate() !== nextDateTime.getDate() ||
+                            currentDateTime.getMonth() !== nextDateTime.getMonth())
+                        || item.sender.username !== nextSender.username) ?
                     <Avatar user={item.sender}/> : null}
                 </View>
                 <View style={styles.rightBlock}>

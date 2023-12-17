@@ -1,6 +1,6 @@
 import React, {useEffect} from "react";
 import axios from "axios";
-import {View, StyleSheet, FlatList} from "react-native";
+import {View, StyleSheet, FlatList, Text} from "react-native";
 import {AppBaseURL} from "@app/config";
 import {isAChatArray} from "@app/types/ChatType";
 import ContactSearcher from "@app/components/chating/elements/ContactSearcher";

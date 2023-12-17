@@ -39,7 +39,6 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         kwargs["first_user"] = self.context["request"].user
-        kwargs["second_user"] = get_object_or_404(User, username=kwargs.get("second_user"))
         return super().save(**kwargs)
 
 # "2023-10-15T15:40:19.209225Z"

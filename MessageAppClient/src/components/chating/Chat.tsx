@@ -24,16 +24,18 @@ const markMessageAsRead = async (message_id: string) => {
 const Chat = ({route, navigation}) => {
     console.log("Rendering Chat");
     const messageListRef = useRef(null);
-    const {chats,
-           setChats,
-           messages,
-           setMessages} = useChat();
+    const {
+        chats,
+        setChats,
+        messages,
+        setMessages
+    } = useChat();
     const {authState} = useAuth();
     const {
         userData,
         chatData,
         title
-    }: { userData: User, chatData: Chat_, title: string } = route.params;
+    }: { userData: User | null, chatData: Chat_ | null, title: string } = route.params;
     const [responseMessagesData, setResponseMessagesData] =
         useState<{
             count: number,
@@ -53,65 +55,64 @@ const Chat = ({route, navigation}) => {
         return <MessageItem index={props.index} messages={messages} item={props.item}/>
     }
 
+    const getResponseMessagesData = async (url: string) => {
+        try {
+            const response = await axios.get(url);
+            ({
+                results: responseMessagesData.results,
+                previous: responseMessagesData.previous,
+                next: responseMessagesData.next,
+                count: responseMessagesData.count
+            } = response.data);
+            console.log(response);
+            return responseMessagesData.results
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    const markMessageAsRead = () => {}
+
     const onRefresh = () => {
         // console.log(responseMessagesData.next);
+        if (!responseMessagesData.next) return;
         setIsRefresh(true);
-        if (responseMessagesData.next) {
-            axios.get(responseMessagesData.next)
-                .then((response) => {
-                    ({
-                        results: responseMessagesData.results,
-                        previous: responseMessagesData.previous,
-                        next: responseMessagesData.next,
-                        count: responseMessagesData.count
-                    } = response.data);
-                    setMessages((() => {
-                        const sortedMessages = responseMessagesData.results.sort(sortMessages);
-                        return [...sortedMessages, ...messages]
-                    })());
-                })
-                .catch((e) => console.error(e.response.data));
-        }
+        getResponseMessagesData(responseMessagesData.next).then((results) => {
+                setMessages([...results.sort(), ...messages]);
+            }
+        )
         setIsRefresh(false);
     }
 
     useEffect(() => {
         console.log("Start useEffect in Chat");
-
         // changing navigation header title to username
-        navigation.setOptions({
-            title
-        })
+        navigation.setOptions({title});
+
         // if we have only user data and no chat data, we won't receive messages, because they obviously don't exist
         if (!chatData) return;
-        axios.get(AppBaseURL + `message/?chat_id=${chatData.public_id}&limit=20`)
-            .then((response) => {
-                ({
-                    results: responseMessagesData.results,
-                    previous: responseMessagesData.previous, next: responseMessagesData.next,
-                    count: responseMessagesData.count
-                } = response.data);
-                setMessages(responseMessagesData.results.sort(sortMessages));
-                messageListRef.current?.scrollToEnd({animating: true});
-                for (let message of responseMessagesData.results) {
-                    // if it is a message from another user, and it's not read, we mark it as read
-                    if (authState.user.username != message.sender.username && !message.is_read) {
-                        for (let chat of chats) {
-                            if (chat.public_id == message.chat && chat.unread_messages_count > 0) {
-                                chat.unread_messages_count -= 1;
-                                setChats(() => [...chats]);
-                                markMessageAsRead(message.public_id);
-                                break;
-                            }
-                        }
-                    }
-                }
-            })
-            .catch((e) => {
-                console.log(e);
-            })
-
+        getResponseMessagesData(AppBaseURL + `message/?chat_id=${chatData.public_id}&limit=20`)
+            .then((results) => {
+                setMessages(results.sort(sortMessages));
+            });
+        messageListRef.current?.scrollToEnd({animating: true});
+        // for (let message of results) {
+        //     // if it is a message from another user, and it's not read, we mark it as read
+        //     if (authState.user.username != message.sender.username && !message.is_read) {
+        //         for (let chat of chats) {
+        //             if (chat.public_id == message.chat && chat.unread_messages_count > 0) {
+        //                 chat.unread_messages_count -= 1;
+        //                 setChats(() => [...chats]);
+        //                 markMessageAsRead(message.public_id);
+        //                 break;
+        //             }
+        //         }
+        //     }
+        // }
         console.log("End useEffect in Chat");
+        return () => {
+            setMessages([]);
+        }
     }, [])
 
 
@@ -124,6 +125,7 @@ const Chat = ({route, navigation}) => {
                 renderItem={renderMessage}
                 keyExtractor={keyExtractor}
                 onRefresh={onRefresh}
+                onEndReached={() => console.log("Message is read")}
                 refreshing={isRefresh}
             />
             <View style={styles.footer}>
@@ -166,4 +168,4 @@ const styles = StyleSheet.create({
         aspectRatio: 1
     }
 })
-export default Chat;
+export default Chat

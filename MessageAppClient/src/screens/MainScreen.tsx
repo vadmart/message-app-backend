@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import Chats from "../components/chating/Chats";
 import Chat from "../components/chating/Chat"
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import {Chat_} from "@app/types/ChatType";
+import {Chat_, isAChat} from "@app/types/ChatType";
 import {ChatProvider} from "@app/context/ChatContext";
 import {OneSignal, NotificationWillDisplayEvent} from "react-native-onesignal";
 import {isAMessage, Message} from "@app/types/MessageType";
@@ -25,27 +25,26 @@ const MainScreen = () => {
         const notificationsListener = (e: NotificationWillDisplayEvent) => {
             console.log("Incoming notification...");
             if (!chats) return;
-            const message= Object.assign(e.notification.additionalData, {content: e.notification.body});
-            if (!isAMessage(message)) return;
-            console.log("Incoming message: ");
-            console.log(message)
-
-            for (let i = chats.length - 1; i >= 0; --i) {
-                if (chats[i].public_id == message.chat) {
-                    for (let param in message) {
-                        chats[i].last_message[param] = message[param];
+            const incomingObject= Object.assign(e.notification.additionalData, {content: e.notification.body});
+            if (isAMessage(incomingObject)) {
+                for (let i = chats.length - 1; i >= 0; --i) {
+                    if (chats[i].public_id == incomingObject.chat) {
+                        for (let param in incomingObject) {
+                            chats[i].last_message[param] = incomingObject[param];
+                        }
+                        if (authState.user.username != incomingObject.sender.username) {
+                            chats[i].unread_messages_count += 1;
+                        }
+                        break;
                     }
-                    if (authState.user.username != message.sender.username) {
-                        chats[i].unread_messages_count += 1;
-                    }
-                    break;
                 }
+                chats.sort(sortChats);
+                setChats(() => [...chats]);
+                if (!messages) return;
+                setMessages(() => [...messages, incomingObject]);
+            } else if (isAChat(incomingObject)) {
+                setChats(() => [...chats, incomingObject]);
             }
-            chats.sort(sortChats);
-            setChats(() => [...chats]);
-
-            if (!messages) return;
-            setMessages(() => [...messages, message]);
         }
 
         OneSignal.Notifications.addEventListener("foregroundWillDisplay", notificationsListener);

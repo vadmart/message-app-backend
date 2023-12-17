@@ -2,8 +2,11 @@ import React, {useRef, useState} from "react"
 import axios from "axios";
 import { AppBaseURL } from "@app/config";
 import {StyleSheet, TextInput, View, Pressable, Image} from "react-native"
+import {useChat} from "@app/context/ChatContext";
+import chat from "@app/components/chating/Chat";
 
 export function ChatKeyboard({chatData=null, userData=null}) {
+    const {setChats} = useChat();
     const [inputtedData, setInputtedData] = useState("");
 
     const inputFieldRef = useRef(null);
@@ -28,9 +31,10 @@ export function ChatKeyboard({chatData=null, userData=null}) {
                 "content": inputtedData
             }).then((response) => {
                 chatData = response.data;
+                console.log(chatData);
                 setInputtedData("");
-                console.log(chatData)
                 inputFieldRef.current.clear();
+                setChats(chatData);
             })
             .catch((reason) => {
                 console.error(reason);
@@ -47,12 +51,15 @@ export function ChatKeyboard({chatData=null, userData=null}) {
                 />
             </View>
             <View style={styles.optionsBlock}>
-            <Pressable
-                        onPress={createMessage}
-                        disabled={(!inputtedData)}
-                        style={{padding: 3}}>
-                <Image style={styles.sendButtonIcon} source={require("@img/chat-icons/convert.png")} resizeMethod={"resize"} />
-            </Pressable>
+                <Pressable
+                            onPress={createMessage}
+                            disabled={(!inputtedData)}
+                            style={{padding: 3}}>
+                    <Image style={styles.buttonIcon} source={require("@img/chat-icons/send.png")} resizeMethod={"resize"} />
+                </Pressable>
+                <Pressable style={{padding: 3}}>
+                    <Image style={styles.buttonIcon} source={require("@img/chat-icons/clip_icon.png")} resizeMethod={"resize"} />
+                </Pressable>
             </View>
         </>
     )
@@ -68,13 +75,16 @@ const styles = StyleSheet.create({
         fontSize: 18
     },
     optionsBlock: {
+        borderWidth: 1,
+        borderColor: "red",
         flex: 0.1,
         justifyContent: "center",
         alignItems: "center",
-        paddingRight: 5
+        // paddingRight: 15,
+        flexDirection: "row"
     },
-    sendButtonIcon: {
+    buttonIcon: {
         height: "85%",
         aspectRatio: 1
-    }
+    },
 });
