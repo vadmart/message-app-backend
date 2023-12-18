@@ -3,12 +3,10 @@ import {Image, Pressable, StyleSheet, Text, TextInput, View} from "react-native"
 import axios from "axios";
 import {AppBaseURL} from "@app/config";
 import {User} from "@app/types/UserType";
-import {useChat} from "@app/context/ChatContext";
 
 const ContactSearcher = ({navigation}) => {
     const [phoneNumber, setPhoneNumber] = useState("");
     const [error, setError] = useState("");
-    const {setMessages} = useChat();
 
     const handleSubmit = async () => {
         if (!phoneNumber) {

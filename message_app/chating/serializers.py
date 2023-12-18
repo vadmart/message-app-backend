@@ -21,6 +21,7 @@ class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         exclude = ["id", "edited_at"]
+        write_only_fields = ["chat"]
 
     def save(self, **kwargs):
         kwargs["sender"] = self.context["request"].user

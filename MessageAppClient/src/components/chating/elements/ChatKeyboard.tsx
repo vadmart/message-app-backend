@@ -50,21 +50,20 @@ export function ChatKeyboard({payload=null}) {
 
 const styles = StyleSheet.create({
     keyboardBlock: {
-        flex: 0.9,
+        flex: 1,
         justifyContent: "center",
-        paddingLeft: 15
+        paddingLeft: 15,
+        borderRightWidth: 1,
+        borderRightColor: "rgba(100, 100, 100, 0.3)"
     },
     keyboard: {
         fontSize: 18
     },
     optionsBlock: {
-        borderWidth: 1,
-        borderColor: "red",
-        flex: 0.1,
         justifyContent: "center",
         alignItems: "center",
-        // paddingRight: 15,
-        flexDirection: "row"
+        flexDirection: "row",
+        columnGap: 5
     },
     buttonIcon: {
         height: "85%",
