@@ -6,9 +6,17 @@ from message_app.chating.models import Message, Chat
 from django.db.models import Q
 
 
+class ChatRelatedField(serializers.SlugRelatedField):
+    def __init__(self, **kwargs):
+        super(ChatRelatedField, self).__init__("public_id", **kwargs)
+
+    def to_representation(self, obj):
+        return str(super().to_representation(obj))
+
+
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
-    chat = serializers.SlugRelatedField(queryset=Chat.objects.all(), slug_field="public_id", many=False)
+    chat = ChatRelatedField(queryset=Chat.objects.all(), many=False)
 
     class Meta:
         model = Message
@@ -34,7 +42,8 @@ class ChatSerializer(serializers.ModelSerializer):
         rep["last_message"] = MessageSerializer(last_message).data
         rep["unread_messages_count"] = len(Message.objects.filter(Q(chat__public_id=instance.public_id) &
                                                                   Q(is_read=False) &
-                                                                  ~Q(sender=self.context["request"].user)))
+                                                                  ~Q(sender=self.context["request"].user))) \
+            if self.context.get("request") else 0
         return rep
 
     def save(self, **kwargs):

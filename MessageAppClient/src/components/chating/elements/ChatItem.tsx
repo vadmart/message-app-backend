@@ -11,7 +11,7 @@ const ChatItem = ({item, navigation}: {item: Chat_, navigation: any}) => {
     const companion = (item.first_user.username == user.username) ? item.second_user : item.first_user;
     return (
         <Pressable style={styles.message} onPress={(e) => {
-            navigation.navigate("Chat", {chatData: item, title: companion.username});
+            navigation.navigate("Chat", {payload: {chatData: item, title: companion.username}});
         }
         }>
             <View style={styles.avatarBlock}>

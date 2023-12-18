@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 
 
 class ChatViewSet(viewsets.ModelViewSet):
-    http_method_names = ["get", "post", "delete"]
+    http_method_names = ["get", "delete"]
     permission_classes = [IsAuthenticated]
     serializer_class = ChatSerializer
 
@@ -20,16 +20,16 @@ class ChatViewSet(viewsets.ModelViewSet):
         return Chat.objects.filter(Q(first_user=self.request.user) | Q(second_user=self.request.user))
 
     # TODO: rethink logic of creating message after chat's creating
-    def create(self, request, *args, **kwargs):
-        if not request.data.get("content") and not request.data.get("second_user"):
-            return Response("You cannot create chat without creating message", status=status.HTTP_400_BAD_REQUEST)
-        second_user = User.objects.get(username=request.data.get("second_user"))
-        serializer = self.get_serializer(data={"second_user": second_user})
-        serializer.is_valid(raise_exception=True)
-        chat = serializer.save(second_user=second_user)
-        Message.objects.create(chat=chat, sender=request.user, content=request.data.get("content"))
-        OneSignal.Push.create_chat_notification(cs=serializer)
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+    # def create(self, request, *args, **kwargs):
+    #     if not request.data.get("content") and not request.data.get("second_user"):
+    #         return Response("You cannot create chat without creating message", status=status.HTTP_400_BAD_REQUEST)
+    #     second_user = User.objects.get(username=request.data.get("second_user"))
+    #     serializer = self.get_serializer(data={"second_user": second_user})
+    #     serializer.is_valid(raise_exception=True)
+    #     chat = serializer.save(second_user=second_user)
+    #     Message.objects.create(chat=chat, sender=request.user, content=request.data.get("content"))
+    #     OneSignal.Push.create_chat_notification(cs=serializer)
+    #     return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False)
     def get_chat_by_user(self, request):
@@ -57,12 +57,28 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Message.objects.filter(chat__public_id=chat_id)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        OneSignal.Push.create_message_notification(ms=serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        if "chat" in request.data and "second_user" not in request.data:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            OneSignal.Push.create_message_notification(ms=serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        elif "second_user" in request.data and "chat" not in request.data:
+            second_user = get_object_or_404(User, public_id=request.data["second_user"])
+            chat = Chat.objects.create(first_user=request.user, second_user=second_user)
+            request.data["chat"] = chat.public_id
+            del request.data["second_user"]
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            OneSignal.Push.create_chat_notification(cs=ChatSerializer(chat))
+            OneSignal.Push.create_message_notification(ms=serializer, only_for_sender=True)
+            headers = self.get_success_headers(serializer.data)
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        else:
+            return Response("Invalid request: you must provide either 'chat' or 'second_user'",
+                            status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=["POST"], detail=True)
     def read(self, request, *args, **kwargs):

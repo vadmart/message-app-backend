@@ -5,63 +5,46 @@ import {StyleSheet, TextInput, View, Pressable, Image} from "react-native"
 import {useChat} from "@app/context/ChatContext";
 import chat from "@app/components/chating/Chat";
 
-export function ChatKeyboard({chatData=null, userData=null}) {
+export function ChatKeyboard({payload=null}) {
     const {setChats} = useChat();
     const [inputtedData, setInputtedData] = useState("");
 
     const inputFieldRef = useRef(null);
 
     const createMessage = () =>  {
-        if (chatData) {
             axios.post(AppBaseURL + "message/", {
-                "chat": chatData.public_id,
-                "content": inputtedData
+                "content": inputtedData,
+                ...payload.chatData ? {chat: payload.chatData.public_id} : {second_user: payload.userData.public_id}
             }).then((response) => {
                 console.log(response.data);
                 setInputtedData("");
                 inputFieldRef.current.clear();
             })
-            .catch((reason) => {
-                console.error(reason);
+            .catch((err) => {
+                console.error(err.response.data);
             })
         }
-        else if (userData) {
-            axios.post(AppBaseURL + "chat/", {
-                "second_user": userData.username,
-                "content": inputtedData
-            }).then((response) => {
-                chatData = response.data;
-                console.log(chatData);
-                setInputtedData("");
-                inputFieldRef.current.clear();
-                setChats(chatData);
-            })
-            .catch((reason) => {
-                console.error(reason);
-            })
-        }
-    }
-    return (
-        <>
-            <View style={styles.keyboardBlock}>
-                <TextInput style={styles.keyboard}
-                            ref={inputFieldRef}
-                            onChangeText={(text) => {setInputtedData(text)}}
-                            placeholder={"Type some text..."}
-                />
-            </View>
-            <View style={styles.optionsBlock}>
-                <Pressable
-                            onPress={createMessage}
-                            disabled={(!inputtedData)}
-                            style={{padding: 3}}>
-                    <Image style={styles.buttonIcon} source={require("@img/chat-icons/send.png")} resizeMethod={"resize"} />
-                </Pressable>
-                <Pressable style={{padding: 3}}>
-                    <Image style={styles.buttonIcon} source={require("@img/chat-icons/clip_icon.png")} resizeMethod={"resize"} />
-                </Pressable>
-            </View>
-        </>
+        return (
+            <>
+                <View style={styles.keyboardBlock}>
+                    <TextInput style={styles.keyboard}
+                                ref={inputFieldRef}
+                                onChangeText={(text) => {setInputtedData(text)}}
+                                placeholder={"Type some text..."}
+                    />
+                </View>
+                <View style={styles.optionsBlock}>
+                    <Pressable
+                                onPress={createMessage}
+                                disabled={(!inputtedData)}
+                                style={{padding: 3}}>
+                        <Image style={styles.buttonIcon} source={require("@img/chat-icons/send.png")} resizeMethod={"resize"} />
+                    </Pressable>
+                    <Pressable style={{padding: 3}}>
+                        <Image style={styles.buttonIcon} source={require("@img/chat-icons/clip_icon.png")} resizeMethod={"resize"} />
+                    </Pressable>
+                </View>
+            </>
     )
 }
 

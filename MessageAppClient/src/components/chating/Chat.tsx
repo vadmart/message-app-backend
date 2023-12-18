@@ -32,10 +32,8 @@ const Chat = ({route, navigation}) => {
     } = useChat();
     const {authState} = useAuth();
     const {
-        userData,
-        chatData,
-        title
-    }: { userData: User | null, chatData: Chat_ | null, title: string } = route.params;
+        payload
+    } = route.params;
     const [responseMessagesData, setResponseMessagesData] =
         useState<{
             count: number,
@@ -87,11 +85,11 @@ const Chat = ({route, navigation}) => {
     useEffect(() => {
         console.log("Start useEffect in Chat");
         // changing navigation header title to username
-        navigation.setOptions({title});
+        navigation.setOptions({title: payload.title});
 
         // if we have only user data and no chat data, we won't receive messages, because they obviously don't exist
-        if (!chatData) return;
-        getResponseMessagesData(AppBaseURL + `message/?chat_id=${chatData.public_id}&limit=20`)
+        if (!payload.chatData) return;
+        getResponseMessagesData(AppBaseURL + `message/?chat_id=${payload.chatData.public_id}&limit=20`)
             .then((results) => {
                 setMessages(results.sort(sortMessages));
             });
@@ -129,7 +127,7 @@ const Chat = ({route, navigation}) => {
                 refreshing={isRefresh}
             />
             <View style={styles.footer}>
-                <ChatKeyboard userData={userData} chatData={chatData}/>
+                <ChatKeyboard payload={payload}/>
             </View>
         </View>
     )

@@ -20,10 +20,10 @@ const ContactSearcher = ({navigation}) => {
                 const userData: User = response.data;
                 axios.get(AppBaseURL + `chat/get_chat_by_user/?phone_number=${encodeURIComponent(phoneNumber)}`)
                     .then((resp) => {
-                        navigation.navigate("Chat", {chatData: resp.data, title: userData.username})
+                        navigation.navigate("Chat", {payload: {chatData: resp.data, title: userData.username}})
                     })
                     .catch((e) => {
-                        navigation.navigate("Chat", {userData, title: userData.username})
+                        navigation.navigate("Chat", {payload: {userData, title: userData.username}})
                     })
             })
             .catch((err) => setError(err.response.data["detail"]))
