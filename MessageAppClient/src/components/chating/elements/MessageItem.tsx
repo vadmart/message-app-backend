@@ -1,11 +1,12 @@
-import {View, Text, StyleSheet} from "react-native"
-import { Message } from "@app/types/MessageType";
-import { toReadableDate, toReadableTime } from "@app/components/helpers/chatDatetime";
+import {Image, Pressable, StyleSheet, Text, View} from "react-native"
+import {Message} from "@app/types/MessageType";
+import {toReadableDate, toReadableTime} from "@app/components/helpers/chatDatetime";
 import Avatar from "@app/components/chating/elements/Avatar";
 import React from "react";
+import {getFileName} from "@app/components/helpers/file";
 
 const MessageItem = (props) => {
-    const {index, messages, item}: {index: number, messages: Message[], item: Message} = props;
+    const {index, messages, item}: { index: number, messages: Message[], item: Message } = props;
     const currentDateTime = new Date(item.created_at);
     const previousDateTime = (index > 0) ? new Date(messages[index - 1].created_at) : new Date(-100);
     const nextDateTime = (index < messages.length - 1) ? new Date(messages[index + 1].created_at) : new Date(-100);
@@ -14,20 +15,30 @@ const MessageItem = (props) => {
         <View>
             {(currentDateTime.getDate() !== previousDateTime.getDate() ||
                     currentDateTime.getMonth() !== previousDateTime.getMonth()) &&
-            <View style={styles.dateBlock}>
-                <View style={styles.date}>
-                    <Text style={styles.dateText}>{toReadableDate(currentDateTime)}</Text>
-                </View>
-            </View>}
+                <View style={styles.dateBlock}>
+                    <View style={styles.date}>
+                        <Text style={styles.dateText}>{toReadableDate(currentDateTime)}</Text>
+                    </View>
+                </View>}
             <View style={styles.messageBlock}>
                 <View style={styles.leftBlock}>
                     {((currentDateTime.getDate() !== nextDateTime.getDate() ||
                             currentDateTime.getMonth() !== nextDateTime.getMonth())
                         || item.sender.username !== nextSender.username) ?
-                    <Avatar user={item.sender}/> : null}
+                        <Avatar user={item.sender}/> : null}
                 </View>
                 <View style={styles.rightBlock}>
                     <View style={styles.contentTimeBlock}>
+                        {(item.file) && <View style={styles.fileBlock}>
+                            <Pressable style={{
+                                height: 30, backgroundColor: "black", padding: 5, borderRadius: 20
+                            }}>
+                                <Image source={require("@img/chat-icons/download.png")}
+                                       style={{height: "85%", aspectRatio: 1}}
+                                       resizeMethod={"resize"}/>
+                            </Pressable>
+                            <Text style={{paddingLeft: 10}}>{getFileName(item.file)}</Text>
+                        </View>}
                         <View style={styles.contentBlock}>
                             <Text style={styles.content}>{item.content}</Text>
                         </View>
@@ -59,6 +70,10 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         backgroundColor: "#D9D9D9",
         padding: 10,
+    },
+    fileBlock: {
+        flexDirection: "row",
+        alignItems: "center"
     },
     contentBlock: {
         marginRight: 15

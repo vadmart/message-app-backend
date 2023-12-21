@@ -6,7 +6,7 @@ User = get_user_model()
 
 
 def path_upload_to(instance, filename):
-    return f"{instance.sender.id}/{filename}"
+    return f"{instance.sender.public_id}/{filename}"
 
 
 class Chat(AbstractModel):

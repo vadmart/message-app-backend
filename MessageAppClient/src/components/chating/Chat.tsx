@@ -6,7 +6,7 @@ import axios from 'axios';
 import {Message, isAMessage} from "@app/types/MessageType";
 import {Chat_} from "@app/types/ChatType";
 import {User} from "@app/types/UserType";
-import {ChatKeyboard} from "@app/components/chating/elements/ChatKeyboard";
+import ChatKeyboard from "@app/components/chating/elements/ChatKeyboard";
 import MessageItem from "./elements/MessageItem";
 import {useAuth} from "@app/context/AuthContext";
 import {useChat} from "@app/context/ChatContext";
@@ -123,7 +123,6 @@ const Chat = ({route, navigation}) => {
                 renderItem={renderMessage}
                 keyExtractor={keyExtractor}
                 onRefresh={onRefresh}
-                onEndReached={() => console.log("Message is read")}
                 refreshing={isRefresh}
             />
             <View style={styles.footer}>
@@ -144,26 +143,6 @@ const styles = StyleSheet.create({
     },
     footer: {
         backgroundColor: "#FFFFFF",
-        height: 45,
-        flexDirection: "row"
     },
-    keyboardBlock: {
-        flex: 0.9,
-        justifyContent: "center",
-        paddingLeft: 15
-    },
-    keyboard: {
-        fontSize: 18
-    },
-    optionsBlock: {
-        flex: 0.1,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingRight: 5
-    },
-    sendButtonIcon: {
-        height: "85%",
-        aspectRatio: 1
-    }
 })
 export default Chat
