@@ -1,6 +1,6 @@
 import React, {useEffect, useState, useRef} from "react"
 import {OneSignal} from "react-native-onesignal";
-import {View, StyleSheet, FlatList, ListRenderItem} from "react-native";
+import {View, StyleSheet, FlatList} from "react-native";
 import {AppBaseURL} from "@app/config";
 import axios from 'axios';
 import {Message, isAMessage} from "@app/types/MessageType";

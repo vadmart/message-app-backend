@@ -1,9 +1,11 @@
-import {Image, Pressable, StyleSheet, Text, View} from "react-native"
+import React from "react";
+import RNFetchBlob, {RNFetchBlobConfig} from "rn-fetch-blob";
+import {Image, Pressable, StyleSheet, Text, View, PermissionsAndroid, Platform, Alert} from "react-native"
 import {Message} from "@app/types/MessageType";
 import {toReadableDate, toReadableTime} from "@app/components/helpers/chatDatetime";
 import Avatar from "@app/components/chating/elements/Avatar";
-import React from "react";
-import {getFileName} from "@app/components/helpers/file";
+import {getFileExtension, getFileName} from "@app/components/helpers/file";
+import {err} from "react-native-svg/lib/typescript/xml";
 
 const MessageItem = (props) => {
     const {index, messages, item}: { index: number, messages: Message[], item: Message } = props;
@@ -11,6 +13,54 @@ const MessageItem = (props) => {
     const previousDateTime = (index > 0) ? new Date(messages[index - 1].created_at) : new Date(-100);
     const nextDateTime = (index < messages.length - 1) ? new Date(messages[index + 1].created_at) : new Date(-100);
     const nextSender = (index < messages.length - 1) && messages[index + 1].sender;
+
+    const downloadFile = () => {
+        const date = new Date();
+        const {config, fs} = RNFetchBlob;
+        const RootDir = `${fs.dirs.SDCardDir}/Spilka/`;
+        const path =
+            RootDir + `file_${Math.floor(date.getTime() + date.getSeconds() / 2)}.${getFileExtension(item.file)}`;
+        console.log(path);
+        let options: RNFetchBlobConfig =  {
+            fileCache: true,
+            addAndroidDownloads: {
+                path: path,
+                description: "Downloading a file...",
+                notification: true,
+                useDownloadManager: true
+            }
+        }
+        config(options)
+            .fetch("GET", item.file)
+            .then(res => {
+                console.log('res -> ', JSON.stringify(res));
+                alert('File Downloaded Successfully.');
+            })
+    }
+
+    const checkPermission = async () => {
+        if (Platform.OS === 'ios') {
+            downloadFile();
+        } else {
+            try {
+                const granted = await PermissionsAndroid
+                    .request(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+                        {title: "Необхідний доступ до зовнішнього сховища",
+                                message: "Додатку необхідний доступ до зовнішнього сховища для збереження даних",
+                                buttonPositive: "OK"});
+                if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+                    console.log("Storage permission granted");
+                    downloadFile();
+                } else {
+                    Alert.alert('Error', 'Storage Permission Not Granted')
+                }
+
+            } catch (e) {
+                console.log("++++" + e);
+            }
+        }
+    }
+
     return (
         <View>
             {(currentDateTime.getDate() !== previousDateTime.getDate() ||
@@ -32,16 +82,16 @@ const MessageItem = (props) => {
                         {(item.file) && <View style={styles.fileBlock}>
                             <Pressable style={{
                                 height: 30, backgroundColor: "black", padding: 5, borderRadius: 20
-                            }}>
+                            }} onPress={() => checkPermission()}>
                                 <Image source={require("@img/chat-icons/download.png")}
                                        style={{height: "85%", aspectRatio: 1}}
                                        resizeMethod={"resize"}/>
                             </Pressable>
                             <Text style={{paddingLeft: 10}}>{getFileName(item.file)}</Text>
                         </View>}
-                        <View style={styles.contentBlock}>
-                            <Text style={styles.content}>{item.content}</Text>
-                        </View>
+                        {(item.content) && <View style={styles.contentBlock}>
+                                            <Text style={styles.content}>{item.content}</Text>
+                                           </View>}
                         <View style={styles.timeBlock}>
                             <Text style={styles.time}>{toReadableTime(currentDateTime)}</Text>
                         </View>

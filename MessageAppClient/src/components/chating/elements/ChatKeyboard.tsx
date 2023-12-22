@@ -10,17 +10,6 @@ const ChatKeyboard = ({payload=null}) => {
     const inputFieldRef = useRef(null);
 
     const createMessage = () =>  {
-        // const formData = new FormData();
-        // formData.append("content", content);
-        // // @ts-ignore
-        // if (singleFile) {
-        //     formData.append("file", singleFile);
-        // }
-        // if (payload.chatData) {
-        //     formData.append("chat", payload.chatData.public_id)
-        // } else {
-        //     formData.append("second_user", payload.userData.public_id)
-        // }
         axios.postForm(AppBaseURL + "message/", {
             "content": inputtedData || "",
             ...(payload.chatData) ? {"chat": payload.chatData.public_id} : {"second_user": payload.userData.public_id},
@@ -41,7 +30,7 @@ const ChatKeyboard = ({payload=null}) => {
             const res = await DocumentPicker.pickSingle({
                 type: [DocumentPicker.types.allFiles]
             });
-            console.log(`res: ${JSON.stringify(res)}`);
+            console.log(`res -> ${JSON.stringify(res)}`);
             setSingleFile(res);
         } catch (e) {
             setSingleFile(null);
