@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import Chats from "../components/chating/Chats";
-import Chat from "../components/chating/Chat"
+import Messages from "../components/chating/Messages"
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {Chat_, isAChat} from "@app/types/ChatType";
 import {ChatProvider} from "@app/context/ChatContext";
@@ -60,8 +60,8 @@ const MainScreen = () => {
                               component={Chats}
                               options={{headerShown: false}}
                 />
-                <Stack.Screen name={"Chat"}
-                              component={Chat}
+                <Stack.Screen name={"Messages"}
+                              component={Messages}
                               />
             </Stack.Navigator>
         </ChatProvider>

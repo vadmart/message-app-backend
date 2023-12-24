@@ -10,11 +10,23 @@ const ChatKeyboard = ({payload=null}) => {
     const inputFieldRef = useRef(null);
 
     const createMessage = () =>  {
-        axios.postForm(AppBaseURL + "message/", {
-            "content": inputtedData || "",
-            ...(payload.chatData) ? {"chat": payload.chatData.public_id} : {"second_user": payload.userData.public_id},
-            ...(singleFile) && {"file": singleFile}
-        }, {
+        const formData = new FormData();
+        if (inputtedData) {
+            formData.append("content", inputtedData);
+        }
+        if (singleFile) {
+            // @ts-ignore
+            formData.append("file", singleFile);
+        }
+        if (payload.chatData) {
+            formData.append("chat", payload.chatData.public_id)
+        } else {
+            formData.append("second_user", payload.userData.public_id)
+        }
+        axios.post(AppBaseURL + "message/", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
         }).then((response) => {
             console.log(response.data);
             setInputtedData("");

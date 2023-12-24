@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from rest_framework.exceptions import ValidationError
+
 from message_app.abstract.models import AbstractModel
 
 User = get_user_model()
@@ -20,7 +22,7 @@ class Chat(AbstractModel):
 class Message(AbstractModel):
     chat = models.ForeignKey(to=Chat, on_delete=models.CASCADE)
     sender = models.ForeignKey(to=User, on_delete=models.CASCADE)
-    content = models.TextField()
+    content = models.TextField(null=True, blank=True)
     file = models.FileField(upload_to=path_upload_to, null=True, blank=True)
     is_read = models.BooleanField(default=False)
     edited_at = models.DateTimeField(null=True, blank=True)

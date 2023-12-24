@@ -22,9 +22,10 @@ def create_message_notification(ms: MessageSerializer, only_for_sender=False):
         subscription_ids = [str(ms.data["sender"]["public_id"])]
     with onesignal.ApiClient(config) as api_client:
         api_instance = default_api.DefaultApi(api_client)
+        content = ms.data.get("content") or "📁File"
         notification = Notification(app_id=os.environ.get("ONESIGNAL_APP_ID"),
                                     include_external_user_ids=subscription_ids,
-                                    contents={"en": ms.data["content"]},
+                                    contents={"en": content},
                                     headings={"en": ms.data["sender"]["username"]},
                                     data={**ms.data, "content": None})
 
