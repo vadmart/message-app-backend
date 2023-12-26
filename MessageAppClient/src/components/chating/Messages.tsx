@@ -29,6 +29,7 @@ const Messages = ({route, navigation}) => {
                                 chatData?: Chat_,
                                 userData?: User,
                                 chatIndex?: number}} = route.params;
+    const {authState} = useAuth();
     const [responseMessagesData, setResponseMessagesData] =
         useState<{
             count: number,
@@ -76,7 +77,7 @@ const Messages = ({route, navigation}) => {
         if (!responseMessagesData.next) return;
         setIsRefresh(true);
         getResponseMessagesData(responseMessagesData.next).then((results) => {
-                payload.chatData.messages.unshift(...results);
+                payload.chatData.messages.unshift(...results.sort(sortMessages));
                 changeChatInChats(payload.chatData)
                 setChats([...chats].sort(sortChats));
             }
@@ -90,29 +91,24 @@ const Messages = ({route, navigation}) => {
         navigation.setOptions({title: payload.title});
 
         // if we have only user data and no chat data, we won't receive messages, because they obviously don't exist
-        if (!payload.chatData || payload.chatData.areMessagesFetched) return;
-        console.log("Response data: ");
-        console.log(responseMessagesData);
-        getResponseMessagesData(AppBaseURL + `chat/${payload.chatData.public_id}/message/?offset=1`)
+        if (!payload.chatData) return;
+        if (!payload.chatData.areMessagesFetched) {
+            getResponseMessagesData(AppBaseURL + `chat/${payload.chatData.public_id}/message/`)
             .then((results) => {
-                payload.chatData.messages.unshift(...results.sort(sortMessages));
+                payload.chatData.messages = results.sort(sortMessages);
                 payload.chatData.areMessagesFetched = true;
                 changeChatInChats(payload.chatData);
-                setChats([...chats].sort(sortChats));
+                setChats([...chats]);
             })
             .catch(e => console.log(e));
+        }
         messageListRef.current?.scrollToEnd({animating: true});
-        // for (let message of results) {
+        // for (let message of payload.chatData.messages) {
         //     // if it is a message from another user, and it's not read, we mark it as read
         //     if (authState.user.username != message.sender.username && !message.is_read) {
-        //         for (let chat of chats) {
-        //             if (chat.public_id == message.chat && chat.unread_messages_count > 0) {
-        //                 chat.unread_messages_count -= 1;
-        //                 setChats(() => [...chats]);
-        //                 markMessageAsRead(message.public_id);
-        //                 break;
-        //             }
-        //         }
+        //         payload.chatData.unread_count -= 1;
+        //         changeChatInChats(payload.chatData);
+        //         setChats([...chats]);
         //     }
         // }
         console.log("End useEffect in Messages");

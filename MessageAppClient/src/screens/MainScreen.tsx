@@ -18,33 +18,33 @@ const MainScreen = () => {
     const {authState} = useAuth();
     console.log("MainScreen: Chats: ");
     console.log(chats);
-    // useEffect(() => {
-    //     const notificationsListener = (e: NotificationWillDisplayEvent) => {
-    //         console.log("Incoming notification...");
-    //         if (!chats) return;
-    //         const incomingObject= Object.assign(e.notification.additionalData, {content: e.notification.body});
-    //         if (isAMessage(incomingObject)) {
-    //             for (let i = chats.length - 1; i >= 0; --i) {
-    //                 if (chats[i].public_id == incomingObject.chat) {
-    //                     chats[i].messages.push(incomingObject);
-    //                     if (authState.user.username != incomingObject.sender.username) {
-    //                         chats[i].unread_messages_count += 1;
-    //                     }
-    //                     break;
-    //                 }
-    //             }
-    //             chats.sort(sortChats);
-    //             setChats(() => [...chats]);
-    //         } else if (isAChat(incomingObject)) {
-    //             setChats(() => [...chats, incomingObject]);
-    //         }
-    //     }
-    //
-    //     OneSignal.Notifications.addEventListener("foregroundWillDisplay", notificationsListener);
-    //     return () => {
-    //         OneSignal.Notifications.removeEventListener("foregroundWillDisplay", notificationsListener)
-    //     }
-    // }, [chats]);
+    useEffect(() => {
+        const notificationsListener = (e: NotificationWillDisplayEvent) => {
+            console.log("Incoming notification...");
+            if (!chats) return;
+            const incomingObject= Object.assign(e.notification.additionalData, {content: e.notification.body});
+            if (isAMessage(incomingObject)) {
+                for (let i = chats.length - 1; i >= 0; --i) {
+                    if (chats[i].public_id == incomingObject.chat) {
+                        chats[i].messages.push(incomingObject);
+                        if (authState.user.username != incomingObject.sender.username) {
+                            chats[i].unread_count += 1;
+                        }
+                        break;
+                    }
+                }
+                chats.sort(sortChats);
+                setChats(() => [...chats]);
+            } else if (isAChat(incomingObject)) {
+                setChats(() => [...chats, incomingObject]);
+            }
+        }
+
+        OneSignal.Notifications.addEventListener("foregroundWillDisplay", notificationsListener);
+        return () => {
+            OneSignal.Notifications.removeEventListener("foregroundWillDisplay", notificationsListener)
+        }
+    }, [chats]);
 
     return (
         <ChatProvider value={chatsState}>
