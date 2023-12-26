@@ -1,15 +1,15 @@
-import React, {useEffect, useState, useRef} from "react"
-import {OneSignal} from "react-native-onesignal";
-import {View, StyleSheet, FlatList} from "react-native";
+import React, {useEffect, useRef, useState} from "react"
+import {FlatList, StyleSheet, View} from "react-native";
 import {AppBaseURL} from "@app/config";
 import axios from 'axios';
-import {Message, isAMessage} from "@app/types/MessageType";
-import {Chat_} from "@app/types/ChatType";
-import {User} from "@app/types/UserType";
+import {Message} from "@app/types/MessageType";
 import ChatKeyboard from "@app/components/chating/elements/ChatKeyboard";
 import MessageItem from "./elements/MessageItem";
 import {useAuth} from "@app/context/AuthContext";
 import {useChat} from "@app/context/ChatContext";
+import {sortChats} from "@app/components/helpers/sort";
+import {Chat_} from "@app/types/ChatType";
+import {User} from "@app/types/UserType";
 
 const markMessageAsRead = async (message_id: string) => {
     try {
@@ -24,16 +24,11 @@ const markMessageAsRead = async (message_id: string) => {
 const Messages = ({route, navigation}) => {
     console.log("Rendering Messages");
     const messageListRef = useRef(null);
-    const {
-        chats,
-        setChats,
-        messages,
-        setMessages
-    } = useChat();
-    const {authState} = useAuth();
-    const {
-        payload
-    } = route.params;
+    const {chats, setChats} = useChat();
+    const {payload}: {payload: {title: string,
+                                chatData?: Chat_,
+                                userData?: User,
+                                chatIndex?: number}} = route.params;
     const [responseMessagesData, setResponseMessagesData] =
         useState<{
             count: number,
@@ -44,41 +39,48 @@ const Messages = ({route, navigation}) => {
     const keyExtractor = item => item.public_id;
     const [isRefresh, setIsRefresh] = useState(false);
 
-
     const sortMessages = (firstMessage: Message, secondMessage: Message) => {
         return new Date(firstMessage.created_at).getTime() - new Date(secondMessage.created_at).getTime();
     }
 
     const renderMessage = (props) => {
-        return <MessageItem index={props.index} messages={messages} item={props.item}/>
+        // console.log(props);
+        return <MessageItem index={props.index} messages={payload.chatData.messages} item={props.item}/>
     }
 
     const getResponseMessagesData = async (url: string) => {
-        try {
-            const response = await axios.get(url);
-            ({
-                results: responseMessagesData.results,
-                previous: responseMessagesData.previous,
-                next: responseMessagesData.next,
-                count: responseMessagesData.count
-            } = response.data);
-            console.log(response);
-            return responseMessagesData.results
-        } catch (e) {
-            console.error(e);
+        const response = await axios.get(url);
+        ({
+            results: responseMessagesData.results,
+            previous: responseMessagesData.previous,
+            next: responseMessagesData.next,
+            count: responseMessagesData.count
+        } = response.data);
+        return responseMessagesData.results
+    }
+
+    const changeChatInChats = (currentChat: Chat_): void => {
+        for (let i = 0; i < chats.length; ++i) {
+            if (chats[i].public_id == currentChat.public_id) {
+                chats[i] = currentChat;
+                break
+            }
         }
     }
 
-    const markMessageAsRead = () => {}
+    const markMessageAsRead = () => {
+    }
 
     const onRefresh = () => {
         // console.log(responseMessagesData.next);
         if (!responseMessagesData.next) return;
         setIsRefresh(true);
         getResponseMessagesData(responseMessagesData.next).then((results) => {
-                setMessages([...results.sort(), ...messages]);
+                payload.chatData.messages.unshift(...results);
+                changeChatInChats(payload.chatData)
+                setChats([...chats].sort(sortChats));
             }
-        )
+        ).catch(e => console.log(e))
         setIsRefresh(false);
     }
 
@@ -89,10 +91,15 @@ const Messages = ({route, navigation}) => {
 
         // if we have only user data and no chat data, we won't receive messages, because they obviously don't exist
         if (!payload.chatData) return;
-        getResponseMessagesData(AppBaseURL + `message/?chat_id=${payload.chatData.public_id}&limit=20`)
+        console.log("Response data: ");
+        console.log(responseMessagesData);0
+        getResponseMessagesData(AppBaseURL + `chat/${payload.chatData.public_id}/message/?offset=1`)
             .then((results) => {
-                setMessages(results.sort(sortMessages));
-            });
+                payload.chatData.messages.unshift(...results.sort(sortMessages));
+                changeChatInChats(payload.chatData)
+                setChats([...chats].sort(sortChats));
+            })
+            .catch(e => console.log(e));
         messageListRef.current?.scrollToEnd({animating: true});
         // for (let message of results) {
         //     // if it is a message from another user, and it's not read, we mark it as read
@@ -108,9 +115,6 @@ const Messages = ({route, navigation}) => {
         //     }
         // }
         console.log("End useEffect in Messages");
-        return () => {
-            setMessages([]);
-        }
     }, [])
 
 
@@ -118,7 +122,7 @@ const Messages = ({route, navigation}) => {
         <View style={styles.container}>
             <FlatList
                 style={styles.messageList}
-                data={messages}
+                data={payload.chatData.messages}
                 ref={messageListRef}
                 renderItem={renderMessage}
                 keyExtractor={keyExtractor}

@@ -5,18 +5,18 @@ export interface Chat_ {
     created_at: string,
     first_user: User,
     second_user: User,
-    last_message: Message,
+    messages: Message[],
     public_id: string,
-    unread_messages_count: number
+    unread_count: number
 }
 
 export const isAChat = (obj: any): obj is Chat_ => {
     return "created_at" in obj &&
            "first_user" in obj &&
            "second_user" in  obj &&
-           "last_message" in obj &&
+           "messages" in obj &&
            "public_id" in obj &&
-           "unread_messages_count" in obj
+           "unread_count" in obj
 }
 
 export const isAChatArray = (obj: any): obj is Chat_[] => {

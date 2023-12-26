@@ -13,6 +13,7 @@ const ChatItem = ({item, navigation}: {item: Chat_, navigation: any}) => {
 
     return (
         <Pressable style={styles.message} onPress={(e) => {
+            console.log("Navigate to messages' screen, UUID: " + item.public_id);
             navigation.navigate("Messages", {payload: {chatData: item, title: companion.username}});
         }
         }>
@@ -22,13 +23,13 @@ const ChatItem = ({item, navigation}: {item: Chat_, navigation: any}) => {
             <View style={styles.senderTextBlock}>
                 <Text
                     style={styles.messageSender}>{companion.username}</Text>
-                <Text style={styles.messageText}>{showMessageContent(item.last_message)}</Text>
+                <Text style={styles.messageText}>{showMessageContent(item.messages[item.messages.length - 1])}</Text>
             </View>
-            {item.unread_messages_count != 0 && <View style={styles.unreadCounter}>
-                                                    <Text>{(item.unread_messages_count >= 1000) ? "999+" : item.unread_messages_count}</Text>
+            {item.unread_count != 0 && <View style={styles.unreadCounter}>
+                                                    <Text>{(item.unread_count >= 1000) ? "999+" : item.unread_count}</Text>
                                                 </View>}
             <View style={styles.dateTimeBlock}>
-                <Text style={styles.messageDateTime}>{toReadableDateTime(new Date(item.last_message.created_at))}</Text>
+                <Text style={styles.messageDateTime}>{toReadableDateTime(new Date(item.messages[item.messages.length - 1].created_at))}</Text>
             </View>
         </Pressable>
     )
@@ -70,7 +71,7 @@ const styles = StyleSheet.create({
     dateTimeBlock: {
         flex: 0.25,
         justifyContent: "center",
-        alignItems: "center"
+        alignItems: "center",
     },
     messageDateTime: {
         textAlign: "center"

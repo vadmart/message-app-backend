@@ -16,12 +16,12 @@ const Chats = ({navigation}) => {
         axios.get(AppBaseURL + "chat/")
             .then((response) => {
                 const results = response.data.results;
+                console.log(results);
                 if (!isAChatArray(results)) {
                     console.error(`Response has no chats, but instead: ${results}`);
                     return
                 }
                 results.sort(sortChats);
-                console.log(results);
                 setChats(results);
             })
             .catch((e) => console.log(e));
@@ -38,8 +38,7 @@ const Chats = ({navigation}) => {
                               />
                           )
                       }}
-                      keyExtractor={(item) => item.public_id}
-                      extraData={chats}
+                      keyExtractor={item => item.public_id}
             />
         </View>
     )

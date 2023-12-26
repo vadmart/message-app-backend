@@ -46,11 +46,7 @@ class ChatSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         last_message = Message.objects.filter(chat__public_id=rep["public_id"]).first()
-        rep["last_message"] = MessageSerializer(last_message).data
-        rep["unread_messages_count"] = len(Message.objects.filter(Q(chat__public_id=instance.public_id) &
-                                                                  Q(is_read=False) &
-                                                                  ~Q(sender=self.context["request"].user))) \
-            if self.context.get("request") else 0
+        rep["messages"] = [MessageSerializer(last_message).data]
         return rep
 
     def save(self, **kwargs):

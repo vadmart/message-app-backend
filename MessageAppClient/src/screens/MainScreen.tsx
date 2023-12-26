@@ -14,44 +14,37 @@ const Stack = createNativeStackNavigator();
 const MainScreen = () => {
     console.log("Rendering MainScreen");
     const [chats, setChats] = useState<Chat_[]>([]);
-    const [messages, setMessages] = useState<Message[]>();
-    const chatsState = {chats, setChats, messages, setMessages};
+    const chatsState = {chats, setChats};
     const {authState} = useAuth();
     console.log("MainScreen: Chats: ");
     console.log(chats);
-    console.log("MainScreen: Messages: ");
-    console.log(messages);
-    useEffect(() => {
-        const notificationsListener = (e: NotificationWillDisplayEvent) => {
-            console.log("Incoming notification...");
-            if (!chats) return;
-            const incomingObject= Object.assign(e.notification.additionalData, {content: e.notification.body});
-            if (isAMessage(incomingObject)) {
-                for (let i = chats.length - 1; i >= 0; --i) {
-                    if (chats[i].public_id == incomingObject.chat) {
-                        for (let param in incomingObject) {
-                            chats[i].last_message[param] = incomingObject[param];
-                        }
-                        if (authState.user.username != incomingObject.sender.username) {
-                            chats[i].unread_messages_count += 1;
-                        }
-                        break;
-                    }
-                }
-                chats.sort(sortChats);
-                setChats(() => [...chats]);
-                if (!messages) return;
-                setMessages(() => [...messages, incomingObject]);
-            } else if (isAChat(incomingObject)) {
-                setChats(() => [...chats, incomingObject]);
-            }
-        }
-
-        OneSignal.Notifications.addEventListener("foregroundWillDisplay", notificationsListener);
-        return () => {
-            OneSignal.Notifications.removeEventListener("foregroundWillDisplay", notificationsListener)
-        }
-    }, [chats, messages]);
+    // useEffect(() => {
+    //     const notificationsListener = (e: NotificationWillDisplayEvent) => {
+    //         console.log("Incoming notification...");
+    //         if (!chats) return;
+    //         const incomingObject= Object.assign(e.notification.additionalData, {content: e.notification.body});
+    //         if (isAMessage(incomingObject)) {
+    //             for (let i = chats.length - 1; i >= 0; --i) {
+    //                 if (chats[i].public_id == incomingObject.chat) {
+    //                     chats[i].messages.push(incomingObject);
+    //                     if (authState.user.username != incomingObject.sender.username) {
+    //                         chats[i].unread_messages_count += 1;
+    //                     }
+    //                     break;
+    //                 }
+    //             }
+    //             chats.sort(sortChats);
+    //             setChats(() => [...chats]);
+    //         } else if (isAChat(incomingObject)) {
+    //             setChats(() => [...chats, incomingObject]);
+    //         }
+    //     }
+    //
+    //     OneSignal.Notifications.addEventListener("foregroundWillDisplay", notificationsListener);
+    //     return () => {
+    //         OneSignal.Notifications.removeEventListener("foregroundWillDisplay", notificationsListener)
+    //     }
+    // }, [chats]);
 
     return (
         <ChatProvider value={chatsState}>

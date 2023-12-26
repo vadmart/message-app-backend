@@ -4,11 +4,8 @@ import {Message} from "@app/types/MessageType";
 
 const ChatContext = createContext<{
     chats?: Chat_[],
-    setChats?: React.Dispatch<React.SetStateAction<Chat_[]>>,
-    messages?: Message[],
-    setMessages?: React.Dispatch<React.SetStateAction<Message>[]>
+    setChats?: React.Dispatch<React.SetStateAction<Chat_[]>>
 }>({});
-ChatContext.Consumer
 
 export const useChat = () => {
     return useContext(ChatContext);

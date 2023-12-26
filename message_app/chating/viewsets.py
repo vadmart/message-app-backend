@@ -1,35 +1,35 @@
-from rest_framework.permissions import IsAuthenticated
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from message_app.chating.models import Message, Chat
 from message_app.auth.user.models import User
-from message_app.chating.serializers import MessageSerializer, ChatSerializer
 from message_app.chating import OneSignal
-from django.db.models import Q
-from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
+from message_app.chating.models import Message, Chat
+from message_app.chating.serializers import MessageSerializer, ChatSerializer
 
 
 class ChatViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "delete"]
     permission_classes = [IsAuthenticated]
     serializer_class = ChatSerializer
+    lookup_field = "public_id"
 
     def get_queryset(self):
         return Chat.objects.filter(Q(first_user=self.request.user) | Q(second_user=self.request.user))
 
-    # TODO: rethink logic of creating message after chat's creating
-    # def create(self, request, *args, **kwargs):
-    #     if not request.data.get("content") and not request.data.get("second_user"):
-    #         return Response("You cannot create chat without creating message", status=status.HTTP_400_BAD_REQUEST)
-    #     second_user = User.objects.get(username=request.data.get("second_user"))
-    #     serializer = self.get_serializer(data={"second_user": second_user})
-    #     serializer.is_valid(raise_exception=True)
-    #     chat = serializer.save(second_user=second_user)
-    #     Message.objects.create(chat=chat, sender=request.user, content=request.data.get("content"))
-    #     OneSignal.Push.create_chat_notification(cs=serializer)
-    #     return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True)
+        for chat in serializer.data:
+            unread_count = Message.objects.filter(Q(chat__public_id=chat["public_id"]) &
+                                                  ~Q(sender=request.user) &
+                                                  Q(is_read=False)).count()
+            chat["unread_count"] = unread_count
+        return self.get_paginated_response(serializer.data)
 
     @action(detail=False)
     def get_chat_by_user(self, request):
@@ -53,8 +53,10 @@ class MessageViewSet(viewsets.ModelViewSet):
     lookup_field = "public_id"
 
     def get_queryset(self):
-        chat_id = self.request.query_params.get("chat_id")
-        return Message.objects.filter(chat__public_id=chat_id)
+        chat_public_id = self.kwargs.get("chat_public_id")
+        if chat_public_id is None:
+            return Message.objects.all()
+        return Message.objects.filter(chat__public_id=chat_public_id)
 
     def create(self, request, *args, **kwargs):
         if "chat" in request.data and "second_user" not in request.data:
