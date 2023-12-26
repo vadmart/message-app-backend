@@ -90,13 +90,14 @@ const Messages = ({route, navigation}) => {
         navigation.setOptions({title: payload.title});
 
         // if we have only user data and no chat data, we won't receive messages, because they obviously don't exist
-        if (!payload.chatData) return;
+        if (!payload.chatData || payload.chatData.areMessagesFetched) return;
         console.log("Response data: ");
-        console.log(responseMessagesData);0
+        console.log(responseMessagesData);
         getResponseMessagesData(AppBaseURL + `chat/${payload.chatData.public_id}/message/?offset=1`)
             .then((results) => {
                 payload.chatData.messages.unshift(...results.sort(sortMessages));
-                changeChatInChats(payload.chatData)
+                payload.chatData.areMessagesFetched = true;
+                changeChatInChats(payload.chatData);
                 setChats([...chats].sort(sortChats));
             })
             .catch(e => console.log(e));

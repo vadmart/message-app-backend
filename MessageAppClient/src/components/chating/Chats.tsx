@@ -21,6 +21,9 @@ const Chats = ({navigation}) => {
                     console.error(`Response has no chats, but instead: ${results}`);
                     return
                 }
+                for (let chat of results) {
+                    chat.areMessagesFetched = false;
+                }
                 results.sort(sortChats);
                 setChats(results);
             })

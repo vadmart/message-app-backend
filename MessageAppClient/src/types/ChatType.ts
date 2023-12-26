@@ -7,7 +7,8 @@ export interface Chat_ {
     second_user: User,
     messages: Message[],
     public_id: string,
-    unread_count: number
+    unread_count: number,
+    areMessagesFetched?: boolean
 }
 
 export const isAChat = (obj: any): obj is Chat_ => {
