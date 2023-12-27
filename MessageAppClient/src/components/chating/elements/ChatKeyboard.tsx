@@ -3,39 +3,12 @@ import axios from "axios";
 import { AppBaseURL } from "@app/config";
 import {StyleSheet, TextInput, View, Pressable, Image, Text} from "react-native"
 import DocumentPicker, {DocumentPickerResponse} from "react-native-document-picker"
+import {useChat} from "@app/context/ChatContext";
 
-const ChatKeyboard = ({payload=null}) => {
+const ChatKeyboard = ({onCreateMessage}) => {
     const [singleFile, setSingleFile] = useState<DocumentPickerResponse>(null);
     const [inputtedData, setInputtedData] = useState("");
     const inputFieldRef = useRef(null);
-
-    const createMessage = () =>  {
-        const formData = new FormData();
-        if (inputtedData) {
-            formData.append("content", inputtedData);
-        }
-        if (singleFile) {
-            // @ts-ignore
-            formData.append("file", singleFile);
-        }
-        if (payload.chatData) {
-            formData.append("chat", payload.chatData.public_id)
-        } else {
-            formData.append("second_user", payload.userData.public_id)
-        }
-        axios.post(AppBaseURL + "message/", formData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
-        }).then((response) => {
-            console.log(response.data);
-            setInputtedData("");
-            inputFieldRef.current.clear();
-        })
-        .catch((err) => {
-            console.error(err.response.data);
-        })
-    }
 
     const selectFile = async () => {
         try {
@@ -65,7 +38,11 @@ const ChatKeyboard = ({payload=null}) => {
                     />
                     <View style={styles.optionsBlock}>
                         <Pressable
-                                    onPress={createMessage}
+                                    onPress={() => {
+                                        onCreateMessage(inputtedData, singleFile);
+                                        setInputtedData("");
+                                        inputFieldRef.current.clear();
+                                    }}
                                     disabled={(inputtedData === "" && singleFile === null)}
                                     style={{padding: 3}}>
                             <Image style={styles.buttonIcon} source={require("@img/chat-icons/send.png")} resizeMethod={"resize"} />

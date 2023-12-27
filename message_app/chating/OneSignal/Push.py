@@ -1,25 +1,22 @@
+import os
+from pprint import pprint
+
 import onesignal
 from onesignal.api import default_api
-from onesignal.model.generic_error import GenericError
-from onesignal.model.rate_limiter_error import RateLimiterError
-from onesignal.model.notification import Notification
-from onesignal.model.create_notification_success_response import CreateNotificationSuccessResponse
-from pprint import pprint
 from onesignal.configuration import Configuration
-from message_app.chating.serializers import MessageSerializer, ChatSerializer
+from onesignal.model.notification import Notification
+
 from message_app.chating.models import Chat
-import os
+from message_app.chating.serializers import MessageSerializer, ChatSerializer
 
 print(os.environ.get('ONESIGNAL_REST_API_KEY'))
 config = Configuration(app_key=os.environ.get('ONESIGNAL_REST_API_KEY'))
 
 
 def create_message_notification(ms: MessageSerializer, only_for_sender=False):
-    if not only_for_sender:
-        chat = Chat.objects.get(public_id=ms.data["chat"])
-        subscription_ids = [str(chat.first_user.public_id), str(chat.second_user.public_id)]
-    else:
-        subscription_ids = [str(ms.data["sender"]["public_id"])]
+    chat = Chat.objects.get(public_id=ms.data["chat"])
+    subscription_ids = [str(chat.first_user.public_id) if ms.data["sender"]["public_id"] != str(chat.first_user.public_id)
+                        else str(chat.second_user.public_id)]
     with onesignal.ApiClient(config) as api_client:
         api_instance = default_api.DefaultApi(api_client)
         content = ms.data.get("content") or "📁File"

@@ -5,9 +5,11 @@ import {Message} from "@app/types/MessageType";
 import {toReadableDate, toReadableTime} from "@app/components/helpers/chats";
 import Avatar from "@app/components/chating/elements/Avatar";
 import {getFileExtension, getFileName} from "@app/components/helpers/file";
+import {useAuth} from "@app/context/AuthContext";
 
 const MessageItem = (props) => {
     const {index, messages, item}: { index: number, messages: Message[], item: Message } = props;
+    const {authState} = useAuth();
     const currentDateTime = new Date(item.created_at);
     const previousDateTime = (index > 0) ? new Date(messages[index - 1].created_at) : new Date(-100);
     const nextDateTime = (index < messages.length - 1) ? new Date(messages[index + 1].created_at) : new Date(-100);
@@ -37,7 +39,7 @@ const MessageItem = (props) => {
             })
     }
 
-    const checkPermission = async () => {
+    const checkPermission = async function (){
         if (Platform.OS === 'ios') {
             downloadFile();
         } else {
@@ -71,14 +73,15 @@ const MessageItem = (props) => {
                         <Text style={styles.dateText}>{toReadableDate(currentDateTime)}</Text>
                     </View>
                 </View>}
-            <View style={styles.messageBlock}>
+            <View style={{...styles.messageBlock, ...(authState.user.public_id == item.sender.public_id && {flexDirection: "row-reverse"})}}>
                 <View style={styles.leftBlock}>
                     {((currentDateTime.getDate() !== nextDateTime.getDate() ||
                             currentDateTime.getMonth() !== nextDateTime.getMonth())
                         || item.sender.username !== nextSender.username) ?
                         <Avatar user={item.sender}/> : null}
                 </View>
-                <View style={styles.rightBlock}>
+                <View style={{...styles.rightBlock, ...(authState.user.public_id == item.sender.public_id && {alignItems: "flex-end"})
+                }}>
                     <View style={styles.contentTimeBlock}>
                         {(item.file) &&
                             <View style={styles.fileBlock}>

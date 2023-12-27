@@ -85,6 +85,46 @@ const Messages = ({route, navigation}) => {
         setIsRefresh(false);
     }
 
+    const createMessage = (text=null, singleFile=null) => {
+        payload.chatData.messages.push({
+            created_at: new Date().toString(),
+            chat: payload.chatData.public_id,
+            sender: authState.user,
+            is_read: false,
+            is_edited: false,
+            content: text,
+            public_id: Math.random().toString()
+        });
+        console.log("Pushed message: ");
+        console.log(payload.chatData.messages.slice(-1))
+        changeChatInChats(payload.chatData);
+        setChats(chats.sort(sortChats));
+        console.log(payload.chatData.messages);
+        const formData = new FormData();
+        if (text) {
+            formData.append("content", text);
+        }
+        if (singleFile) {
+            // @ts-ignore
+            formData.append("file", singleFile);
+        }
+        if (payload.chatData) {
+            formData.append("chat", payload.chatData.public_id)
+        } else {
+            formData.append("second_user", payload.userData.public_id)
+        }
+        axios.post(AppBaseURL + "message/", formData, {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }).then((response) => {
+            console.log(response.data);
+        })
+        .catch((err) => {
+            console.error(err);
+        })
+    }
+
     useEffect(() => {
         console.log("Start useEffect in Messages");
         // changing navigation header title to username
@@ -110,7 +150,7 @@ const Messages = ({route, navigation}) => {
         //         changeChatInChats(payload.chatData);
         //         setChats([...chats]);
         //     }
-        // }
+        // }Кул
         console.log("End useEffect in Messages");
     }, [])
 
@@ -127,7 +167,7 @@ const Messages = ({route, navigation}) => {
                 refreshing={isRefresh}
             />
             <View style={styles.footer}>
-                <ChatKeyboard payload={payload}/>
+                <ChatKeyboard onCreateMessage={createMessage}/>
             </View>
         </View>
     )
