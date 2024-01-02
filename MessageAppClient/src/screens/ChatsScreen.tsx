@@ -1,15 +1,16 @@
-import React, {useEffect} from "react";
+import React, {useEffect, memo} from "react";
 import axios from "axios";
 import {View, StyleSheet, FlatList, Text} from "react-native";
 import {AppBaseURL} from "@app/config";
 import {isAChatArray} from "@app/types/ChatType";
-import ContactSearcher from "@app/components/chating/elements/ContactSearcher";
-import ChatItem from "@app/components/chating/elements/ChatItem";
+import ContactSearcher from "@app/components/chating/ContactSearcher";
+import ChatItem from "@app/components/chating/ChatItem";
 import {useChat} from "@app/context/ChatContext";
 import {sortChats} from "@app/components/helpers/sort"
 
-const Chats = ({navigation}) => {
-    console.log("Rendering Chats");
+// @ts-ignore
+const ChatsScreen = memo(({navigation}) => {
+    console.log("Rendering ChatsScreen");
     const {chats, setChats} = useChat();
 
     useEffect(() => {
@@ -42,7 +43,7 @@ const Chats = ({navigation}) => {
             />
         </View>
     )
-}
+})
 
 const styles = StyleSheet.create({
     container: {
@@ -53,4 +54,4 @@ const styles = StyleSheet.create({
     },
 
 })
-export default Chats;
+export default ChatsScreen;

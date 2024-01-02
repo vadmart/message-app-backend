@@ -7,7 +7,7 @@ export interface MessageInfo {
     created_at: string,
     is_read: boolean,
     is_edited: boolean,
-    is_sent?: boolean
+    hasSendingError?: boolean
 }
 export interface Message extends MessageInfo {
     content: string

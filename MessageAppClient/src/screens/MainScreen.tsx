@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from "react";
-import Chats from "../components/chating/Chats";
-import Messages from "../components/chating/Messages"
+import React, {useEffect, useState, memo} from "react";
+import ChatsScreen from "./ChatsScreen";
+import MessagesScreen from "./MessagesScreen"
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {Chat_, isAChat} from "@app/types/ChatType";
 import {ChatProvider} from "@app/context/ChatContext";
@@ -16,7 +16,7 @@ const MainScreen = () => {
     const [chats, setChats] = useState<Chat_[]>([]);
     const chatsState = {chats, setChats};
     const {authState} = useAuth();
-    console.log("MainScreen: Chats: ");
+    console.log("MainScreen: ChatsScreen: ");
     console.log(chats);
     useEffect(() => {
         const notificationsListener = (e: NotificationWillDisplayEvent) => {
@@ -50,11 +50,11 @@ const MainScreen = () => {
         <ChatProvider value={chatsState}>
             <Stack.Navigator initialRouteName={"Chats"}>
                 <Stack.Screen name={"Chats"}
-                              component={Chats}
+                              component={ChatsScreen}
                               options={{headerShown: false}}
                 />
                 <Stack.Screen name={"Messages"}
-                              component={Messages}
+                              component={MessagesScreen}
                               />
             </Stack.Navigator>
         </ChatProvider>

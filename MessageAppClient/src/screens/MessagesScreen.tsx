@@ -1,15 +1,16 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, {useEffect, useRef, useState, memo} from "react"
 import {FlatList, StyleSheet, View} from "react-native";
 import {AppBaseURL} from "@app/config";
 import axios from 'axios';
 import {Message} from "@app/types/MessageType";
-import ChatKeyboard from "@app/components/chating/elements/ChatKeyboard";
-import MessageItem from "./elements/MessageItem";
+import ChatKeyboard from "@app/components/chating/ChatKeyboard";
+import MessageItem from "../components/chating/MessageItem";
 import {useAuth} from "@app/context/AuthContext";
 import {useChat} from "@app/context/ChatContext";
 import {sortChats} from "@app/components/helpers/sort";
 import {Chat_} from "@app/types/ChatType";
 import {User} from "@app/types/UserType";
+import NetInfo from "@react-native-community/netinfo";
 
 const markMessageAsRead = async (message_id: string) => {
     try {
@@ -21,8 +22,9 @@ const markMessageAsRead = async (message_id: string) => {
     }
 }
 
-const Messages = ({route, navigation}) => {
-    console.log("Rendering Messages");
+// @ts-ignore
+const MessagesScreen = memo(({route, navigation}) => {
+    console.log("Rendering MessagesScreen");
     const unsentMessageQueue = [];
     const messageListRef = useRef(null);
     const {chats, setChats} = useChat();
@@ -99,9 +101,9 @@ const Messages = ({route, navigation}) => {
         setChats(chats.sort(sortChats));
         sendMessage(text, singleFile)
             .then((response) => {
-                payload.chatData.messages[arrLength - 1] = response.data
+                payload.chatData.messages[arrLength - 1] = response.data;
             })
-            .catch(() => {payload.chatData.messages[arrLength - 1].is_sent = false});
+            .catch(() => {payload.chatData.messages[arrLength - 1].hasSendingError = true});
     }
 
     const sendMessage = async(text="", singleFile=null) => {
@@ -126,7 +128,7 @@ const Messages = ({route, navigation}) => {
     }
 
     useEffect(() => {
-        console.log("Start useEffect in Messages");
+        console.log("Start useEffect in MessagesScreen");
         // changing navigation header title to username
         navigation.setOptions({title: payload.title});
 
@@ -137,7 +139,7 @@ const Messages = ({route, navigation}) => {
             .then((results) => {
                 payload.chatData.messages = results.sort(sortMessages);
                 payload.chatData.areMessagesFetched = true;
-                changeChatInChats(payload.chatData);
+                // changeChatInChats(payload.chatData);
                 setChats([...chats]);
             })
             .catch(e => console.log(e));
@@ -151,7 +153,33 @@ const Messages = ({route, navigation}) => {
         //         setChats([...chats]);
         //     }
         // }Кул
-        console.log("End useEffect in Messages");
+        console.log("End useEffect in MessagesScreen");
+    }, [])
+
+
+    useEffect(() => {
+        const unsubscribe = NetInfo.addEventListener(state => {
+            console.log("InetState:");
+            console.log(state);
+            if (state.isConnected) {
+                const messages = payload.chatData.messages;
+                for (let i = messages.length - 1; i >= 0; --i) {
+                    if (messages[i].hasSendingError == true) {
+                        delete messages[i].hasSendingError;
+                        sendMessage(messages[i].content, messages[i].file)
+                            .then((response) => {
+                                Object.keys(response.data).forEach(key => {
+                                    messages[i][key] = response.data[key];
+                                })
+                            })
+                            .catch((e) => {messages[i].hasSendingError = true});
+                    } else break
+                }
+            }
+        });
+        return () => {
+            unsubscribe();
+        }
     }, [])
 
 
@@ -171,7 +199,7 @@ const Messages = ({route, navigation}) => {
             </View>
         </View>
     )
-}
+})
 
 const styles = StyleSheet.create({
     container: {
@@ -186,4 +214,4 @@ const styles = StyleSheet.create({
         backgroundColor: "#FFFFFF",
     },
 })
-export default Messages
+export default MessagesScreen;

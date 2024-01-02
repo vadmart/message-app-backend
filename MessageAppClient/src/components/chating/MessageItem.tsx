@@ -3,7 +3,7 @@ import ReactNativeBlobUtil, {ReactNativeBlobUtilConfig} from "react-native-blob-
 import {Alert, Image, PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View} from "react-native"
 import {Message} from "@app/types/MessageType";
 import {toReadableDate, toReadableTime} from "@app/components/helpers/chats";
-import Avatar from "@app/components/chating/elements/Avatar";
+import Avatar from "@app/components/chating/Avatar";
 import {getFileExtension, getFileName} from "@app/components/helpers/file";
 import {useAuth} from "@app/context/AuthContext";
 

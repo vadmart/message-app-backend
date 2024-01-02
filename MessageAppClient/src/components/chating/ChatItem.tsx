@@ -2,7 +2,7 @@ import {Pressable, StyleSheet, Text, View} from "react-native";
 import {toReadableDateTime} from "@app/components/helpers/chats";
 import {useAuth} from "@app/context/AuthContext";
 import React from "react";
-import Avatar from "@app/components/chating/elements/Avatar";
+import Avatar from "@app/components/chating/Avatar";
 import {Chat_} from "@app/types/ChatType";
 import {showMessageContent, normalizeMessageText} from "@app/components/helpers/chats";
 

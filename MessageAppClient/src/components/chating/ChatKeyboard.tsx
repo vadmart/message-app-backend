@@ -41,7 +41,8 @@ const ChatKeyboard = ({onCreateMessage}) => {
                                     onPress={() => {
                                         onCreateMessage(inputtedData, singleFile);
                                         inputFieldRef.current.clear();
-                                        console.log("FieldAfterMessageSending: " + inputtedData)
+                                        setInputtedData("");
+                                        setSingleFile(null);
                                     }}
                                     disabled={(inputtedData === "" && singleFile === null)}
                                     style={{padding: 3}}>
