@@ -11,6 +11,7 @@ import {sortChats} from "@app/components/helpers/sort";
 import {Chat_} from "@app/types/ChatType";
 import {User} from "@app/types/UserType";
 import NetInfo from "@react-native-community/netinfo";
+import Swipeable from "react-native-gesture-handler/Swipeable";
 
 const markMessageAsRead = async (message_id: string) => {
     try {
@@ -49,7 +50,9 @@ const MessagesScreen = memo(({route, navigation}) => {
 
     const renderMessage = (props) => {
         // console.log(props);
-        return <MessageItem index={props.index} messages={payload.chatData.messages} item={props.item}/>
+        return (
+                <MessageItem index={props.index} messages={payload.chatData.messages} item={props.item} />
+        )
     }
 
     const getResponseMessagesData = async (url: string) => {
@@ -98,10 +101,11 @@ const MessagesScreen = memo(({route, navigation}) => {
             public_id: Math.random().toString()
         });
         // changeChatInChats(payload.chatData);
-        setChats(chats.sort(sortChats));
+        setChats([...chats.sort(sortChats)]);
         sendMessage(text, singleFile)
             .then((response) => {
                 payload.chatData.messages[arrLength - 1] = response.data;
+                setChats([...chats.sort(sortChats)])
             })
             .catch(() => {payload.chatData.messages[arrLength - 1].hasSendingError = true});
     }
@@ -140,7 +144,7 @@ const MessagesScreen = memo(({route, navigation}) => {
                 payload.chatData.messages = results.sort(sortMessages);
                 payload.chatData.areMessagesFetched = true;
                 // changeChatInChats(payload.chatData);
-                setChats([...chats]);
+                setChats([...chats.sort(sortChats)]);
             })
             .catch(e => console.log(e));
         }
@@ -168,9 +172,10 @@ const MessagesScreen = memo(({route, navigation}) => {
                         delete messages[i].hasSendingError;
                         sendMessage(messages[i].content, messages[i].file)
                             .then((response) => {
-                                Object.keys(response.data).forEach(key => {
+                                Object.keys(messages[i]).forEach(key => {
                                     messages[i][key] = response.data[key];
-                                })
+                                });
+                                setChats([...chats.sort(sortChats)])
                             })
                             .catch((e) => {messages[i].hasSendingError = true});
                     } else break

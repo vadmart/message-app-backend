@@ -55,6 +55,7 @@ const MessageItem = (props) => {
                     console.log("Storage permission granted");
                     downloadFile();
                 } else {
+                    console.log(typeof granted);
                     Alert.alert('Error', 'Storage Permission Not Granted')
                 }
 
