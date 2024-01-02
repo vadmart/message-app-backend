@@ -23,6 +23,7 @@ const markMessageAsRead = async (message_id: string) => {
 
 const Messages = ({route, navigation}) => {
     console.log("Rendering Messages");
+    const unsentMessageQueue = [];
     const messageListRef = useRef(null);
     const {chats, setChats} = useChat();
     const {payload}: {payload: {title: string,
@@ -78,7 +79,6 @@ const Messages = ({route, navigation}) => {
         setIsRefresh(true);
         getResponseMessagesData(responseMessagesData.next).then((results) => {
                 payload.chatData.messages.unshift(...results.sort(sortMessages));
-                changeChatInChats(payload.chatData)
                 setChats([...chats].sort(sortChats));
             }
         ).catch(e => console.log(e))
@@ -86,7 +86,7 @@ const Messages = ({route, navigation}) => {
     }
 
     const createMessage = (text=null, singleFile=null) => {
-        payload.chatData.messages.push({
+        const arrLength = payload.chatData.messages.push({
             created_at: new Date().toString(),
             chat: payload.chatData.public_id,
             sender: authState.user,
@@ -95,11 +95,16 @@ const Messages = ({route, navigation}) => {
             content: text,
             public_id: Math.random().toString()
         });
-        console.log("Pushed message: ");
-        console.log(payload.chatData.messages.slice(-1))
-        changeChatInChats(payload.chatData);
+        // changeChatInChats(payload.chatData);
         setChats(chats.sort(sortChats));
-        console.log(payload.chatData.messages);
+        sendMessage(text, singleFile)
+            .then((response) => {
+                payload.chatData.messages[arrLength - 1] = response.data
+            })
+            .catch(() => {payload.chatData.messages[arrLength - 1].is_sent = false});
+    }
+
+    const sendMessage = async(text="", singleFile=null) => {
         const formData = new FormData();
         if (text) {
             formData.append("content", text);
@@ -113,15 +118,10 @@ const Messages = ({route, navigation}) => {
         } else {
             formData.append("second_user", payload.userData.public_id)
         }
-        axios.post(AppBaseURL + "message/", formData, {
+        return axios.post(AppBaseURL + "message/", formData, {
             headers: {
                 "Content-Type": "multipart/form-data"
             }
-        }).then((response) => {
-            console.log(response.data);
-        })
-        .catch((err) => {
-            console.error(err);
         })
     }
 

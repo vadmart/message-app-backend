@@ -40,8 +40,8 @@ const ChatKeyboard = ({onCreateMessage}) => {
                         <Pressable
                                     onPress={() => {
                                         onCreateMessage(inputtedData, singleFile);
-                                        setInputtedData("");
                                         inputFieldRef.current.clear();
+                                        console.log("FieldAfterMessageSending: " + inputtedData)
                                     }}
                                     disabled={(inputtedData === "" && singleFile === null)}
                                     style={{padding: 3}}>
