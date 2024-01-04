@@ -3,6 +3,7 @@ import {Image, Pressable, StyleSheet, Text, TextInput, View} from "react-native"
 import axios from "axios";
 import {AppBaseURL} from "@app/config";
 import {User} from "@app/types/UserType";
+import ScreenNames from "@app/config";
 
 const ContactSearcher = ({navigation}) => {
     const [phoneNumber, setPhoneNumber] = useState("");
@@ -18,10 +19,10 @@ const ContactSearcher = ({navigation}) => {
                 const userData: User = response.data;
                 axios.get(AppBaseURL + `chat/get_chat_by_user/?phone_number=${encodeURIComponent(phoneNumber)}`)
                     .then((resp) => {
-                        navigation.navigate("Messages", {payload: {chatData: resp.data, title: userData.username}})
+                        navigation.navigate(ScreenNames.MESSAGES_SCREEN, {payload: {chatData: resp.data, title: userData.username}})
                     })
                     .catch((e) => {
-                        navigation.navigate("Messages", {payload: {userData, title: userData.username}})
+                        navigation.navigate(ScreenNames.MESSAGES_SCREEN, {payload: {userData, title: userData.username}})
                     })
             })
             .catch((err) => setError(err.response.data["detail"]))

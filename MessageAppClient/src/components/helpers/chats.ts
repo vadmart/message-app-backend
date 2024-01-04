@@ -22,6 +22,7 @@ export const toReadableDate = (dateTime: Date): string => {
 }
 
 export const toReadableDateTime = (dateTime: Date): string => {
+    if (!dateTime) return ""
     return `${dateTime.getDate().toString().padStart(2, "0")}.${(dateTime.getMonth() + 1).toString().padStart(2, "0")}.${dateTime.getFullYear()} ${toReadableTime(dateTime)}`
 }
 
@@ -32,8 +33,9 @@ export const normalizeMessageText = (content: string): string => {
 }
 
 export const showMessageContent = (item: Message): string => {
+    if (!item) return ""
     if (item.file && item.content) {
-        return `Файл, ${normalizeMessageText(item.content)}`;
+        return `Файл, ${normalizeMessageText(item.content)}`
     } else if (item.file) {
         return "Файл"
     }

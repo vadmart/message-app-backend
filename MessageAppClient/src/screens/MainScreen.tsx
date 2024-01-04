@@ -8,6 +8,7 @@ import {OneSignal, NotificationWillDisplayEvent} from "react-native-onesignal";
 import {isAMessage, Message} from "@app/types/MessageType";
 import {useAuth} from "@app/context/AuthContext";
 import {sortChats} from "@app/components/helpers/sort";
+import ScreenNames from "@app/config";
 
 const Stack = createNativeStackNavigator();
 
@@ -48,12 +49,12 @@ const MainScreen = () => {
 
     return (
         <ChatProvider value={chatsState}>
-            <Stack.Navigator initialRouteName={"Chats"}>
-                <Stack.Screen name={"Chats"}
+            <Stack.Navigator initialRouteName={ScreenNames.CHATS_SCREEN}>
+                <Stack.Screen name={ScreenNames.CHATS_SCREEN}
                               component={ChatsScreen}
                               options={{headerShown: false}}
                 />
-                <Stack.Screen name={"Messages"}
+                <Stack.Screen name={ScreenNames.MESSAGES_SCREEN}
                               component={MessagesScreen}
                               />
             </Stack.Navigator>

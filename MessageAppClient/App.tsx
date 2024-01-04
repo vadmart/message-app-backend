@@ -18,6 +18,7 @@ import ScreenNames from '@app/config';
 // @ts-ignore
 import {AuthProvider, useAuth} from "@app/context/AuthContext";
 // # TODO: fix ts-ignore
+import {GestureHandlerRootView} from "react-native-gesture-handler";
 
 
 const Stack = createNativeStackNavigator();
@@ -25,16 +26,16 @@ const Stack = createNativeStackNavigator();
 function App() {
 
     return (
-        <AuthProvider>
-            <Layout />
-        </AuthProvider>
+            <AuthProvider>
+                <Layout />
+            </AuthProvider>
     )
 }
 
 export const Layout = () => {
     const {authState} = useAuth();
     return (
-        <SafeAreaView style={styles.container}>
+        <GestureHandlerRootView style={styles.container}>
             <StatusBar backgroundColor={'#001100'} />
             <NavigationContainer>
                 <Stack.Navigator screenOptions={{headerShown: false}}>
@@ -47,7 +48,7 @@ export const Layout = () => {
                 }
                 </Stack.Navigator>
             </NavigationContainer>
-        </SafeAreaView>
+        </GestureHandlerRootView>
     )
 }
 

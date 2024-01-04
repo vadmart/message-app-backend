@@ -22,15 +22,14 @@ const ChatsScreen = memo(({navigation}) => {
                     console.error(`Response has no chats, but instead: ${results}`);
                     return
                 }
-                results.sort(sortChats);
-                setChats(results);
+                setChats(results.sort(sortChats));
             })
             .catch((e) => console.log(e));
     }, [])
 
     return (
         <View style={styles.container}>
-            <ContactSearcher navigation={navigation}/>
+            <ContactSearcher navigation={navigation} />
             <FlatList data={chats}
                       renderItem={({item}) => {
                           return (

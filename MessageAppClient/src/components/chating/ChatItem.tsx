@@ -5,6 +5,7 @@ import React from "react";
 import Avatar from "@app/components/chating/Avatar";
 import {Chat_} from "@app/types/ChatType";
 import {showMessageContent, normalizeMessageText} from "@app/components/helpers/chats";
+import ScreenNames from "@app/config";
 
 
 const ChatItem = ({item, navigation}: {item: Chat_, navigation: any}) => {
@@ -14,7 +15,7 @@ const ChatItem = ({item, navigation}: {item: Chat_, navigation: any}) => {
     return (
         <Pressable style={styles.message} onPress={(e) => {
             console.log("Navigate to messages' screen, UUID: " + item.public_id);
-            navigation.navigate("Messages", {payload: {chatData: item, title: companion.username}});
+            navigation.navigate(ScreenNames.MESSAGES_SCREEN, {payload: {chatData: item, title: companion.username}});
         }
         }>
             <View style={styles.avatarBlock}>
@@ -23,13 +24,16 @@ const ChatItem = ({item, navigation}: {item: Chat_, navigation: any}) => {
             <View style={styles.senderTextBlock}>
                 <Text
                     style={styles.messageSender}>{companion.username}</Text>
-                <Text style={styles.messageText}>{showMessageContent(item.messages[item.messages.length - 1])}</Text>
+                <Text style={styles.messageText}>{(item.messages.length > 0) ?
+                    showMessageContent(item.messages[item.messages.length - 1]) : ""}</Text>
             </View>
-            {item.unread_count != 0 && <View style={styles.unreadCounter}>
+            {(item.unread_count && item.unread_count != 0) ?
+                                                <View style={styles.unreadCounter}>
                                                     <Text>{(item.unread_count >= 1000) ? "999+" : item.unread_count}</Text>
-                                                </View>}
+                                                </View> : null}
             <View style={styles.dateTimeBlock}>
-                <Text style={styles.messageDateTime}>{toReadableDateTime(new Date(item.messages[item.messages.length - 1].created_at))}</Text>
+                <Text style={styles.messageDateTime}>{(item.messages.length > 0) ?
+                    toReadableDateTime(new Date(item.messages[item.messages.length - 1].created_at)) : ""}</Text>
             </View>
         </Pressable>
     )

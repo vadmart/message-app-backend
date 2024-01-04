@@ -7,11 +7,10 @@ import ChatKeyboard from "@app/components/chating/ChatKeyboard";
 import MessageItem from "../components/chating/MessageItem";
 import {useAuth} from "@app/context/AuthContext";
 import {useChat} from "@app/context/ChatContext";
-import {sortChats} from "@app/components/helpers/sort";
+import {sortChats, sortMessages} from "@app/components/helpers/sort";
 import {Chat_} from "@app/types/ChatType";
 import {User} from "@app/types/UserType";
 import NetInfo from "@react-native-community/netinfo";
-import Swipeable from "react-native-gesture-handler/Swipeable";
 
 const markMessageAsRead = async (message_id: string) => {
     try {
@@ -26,7 +25,6 @@ const markMessageAsRead = async (message_id: string) => {
 // @ts-ignore
 const MessagesScreen = memo(({route, navigation}) => {
     console.log("Rendering MessagesScreen");
-    const unsentMessageQueue = [];
     const messageListRef = useRef(null);
     const {chats, setChats} = useChat();
     const {payload}: {payload: {title: string,
@@ -41,18 +39,12 @@ const MessagesScreen = memo(({route, navigation}) => {
             previous: string,
             results: Message[]
         }>({count: null, next: null, previous: null, results: null});
-    const keyExtractor = item => item.public_id;
-    const [isRefresh, setIsRefresh] = useState(false);
 
-    const sortMessages = (firstMessage: Message, secondMessage: Message) => {
-        return new Date(firstMessage.created_at).getTime() - new Date(secondMessage.created_at).getTime();
-    }
 
     const renderMessage = (props) => {
         // console.log(props);
-        return (
-                <MessageItem index={props.index} messages={payload.chatData.messages} item={props.item} />
-        )
+        if (!payload.chatData.messages) return;
+        return <MessageItem index={props.index} messages={payload.chatData.messages} item={props.item} />
     }
 
     const getResponseMessagesData = async (url: string) => {
@@ -66,19 +58,8 @@ const MessagesScreen = memo(({route, navigation}) => {
         return responseMessagesData.results
     }
 
-    const changeChatInChats = (currentChat: Chat_): void => {
-        for (let i = 0; i < chats.length; ++i) {
-            if (chats[i].public_id == currentChat.public_id) {
-                chats[i] = currentChat;
-                break
-            }
-        }
-    }
-
-    const markMessageAsRead = () => {
-    }
-
-    const onRefresh = () => {
+    const [isRefresh, setIsRefresh] = useState(false);
+    const onFlatListRefresh = () => {
         // console.log(responseMessagesData.next);
         if (!responseMessagesData.next) return;
         setIsRefresh(true);
@@ -187,7 +168,6 @@ const MessagesScreen = memo(({route, navigation}) => {
         }
     }, [])
 
-
     return (
         <View style={styles.container}>
             <FlatList
@@ -195,8 +175,8 @@ const MessagesScreen = memo(({route, navigation}) => {
                 data={payload.chatData.messages}
                 ref={messageListRef}
                 renderItem={renderMessage}
-                keyExtractor={keyExtractor}
-                onRefresh={onRefresh}
+                keyExtractor={item => item.public_id}
+                onRefresh={onFlatListRefresh}
                 refreshing={isRefresh}
             />
             <View style={styles.footer}>

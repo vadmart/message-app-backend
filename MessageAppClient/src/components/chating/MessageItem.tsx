@@ -6,6 +6,10 @@ import {toReadableDate, toReadableTime} from "@app/components/helpers/chats";
 import Avatar from "@app/components/chating/Avatar";
 import {getFileExtension, getFileName} from "@app/components/helpers/file";
 import {useAuth} from "@app/context/AuthContext";
+import {useChat} from "@app/context/ChatContext";
+import Swipeable from "react-native-gesture-handler/Swipeable";
+import {ChangeMessageButton, DeleteMessageButton} from "@app/components/chating/Button";
+import {sortChats} from "@app/components/helpers/sort";
 
 const MessageItem = (props) => {
     const {index, messages, item}: { index: number, messages: Message[], item: Message } = props;
@@ -14,6 +18,7 @@ const MessageItem = (props) => {
     const previousDateTime = (index > 0) ? new Date(messages[index - 1].created_at) : new Date(-100);
     const nextDateTime = (index < messages.length - 1) ? new Date(messages[index + 1].created_at) : new Date(-100);
     const nextSender = (index < messages.length - 1) && messages[index + 1].sender;
+    const {chats, setChats} = useChat();
 
     const downloadFile = () => {
         const date = new Date();
@@ -39,7 +44,7 @@ const MessageItem = (props) => {
             })
     }
 
-    const checkPermission = async function (){
+    const checkPermission = async function () {
         if (Platform.OS === 'ios') {
             downloadFile();
         } else {
@@ -65,6 +70,15 @@ const MessageItem = (props) => {
         }
     }
 
+    const onRenderLeftActions = (progress, dragX) => {
+        // const trans = dragX.interpolate()
+        return (
+            <View>
+                <Text>sadas</Text>
+            </View>
+        )
+    }
+
     return (
         <View>
             {(currentDateTime.getDate() !== previousDateTime.getDate() ||
@@ -74,28 +88,40 @@ const MessageItem = (props) => {
                         <Text style={styles.dateText}>{toReadableDate(currentDateTime)}</Text>
                     </View>
                 </View>}
-            <View style={{...styles.messageBlock, ...(authState.user.public_id == item.sender.public_id && {flexDirection: "row-reverse"})}}>
+            <View
+                style={[styles.messageBlock, (authState.user.public_id == item.sender.public_id && {flexDirection: "row-reverse"})]}>
                 <View style={styles.leftBlock}>
                     {((currentDateTime.getDate() !== nextDateTime.getDate() ||
                             currentDateTime.getMonth() !== nextDateTime.getMonth())
                         || item.sender.username !== nextSender.username) ?
                         <Avatar user={item.sender}/> : null}
                 </View>
-                <View style={{...styles.rightBlock, ...(authState.user.public_id == item.sender.public_id && {alignItems: "flex-end"})
+                <View style={{
+                    ...styles.rightBlock, ...(authState.user.public_id == item.sender.public_id && {alignItems: "flex-end"})
                 }}>
-                    <View style={styles.contentTimeBlock}>
-                        {(item.file) &&
-                            <View style={styles.fileBlock}>
-                                <Pressable style={styles.downloadButton} onPress={() => checkPermission()}>
-                                    <Image source={require("@img/chat-icons/download.png")}
-                                           style={styles.downloadButtonIcon}
-                                           resizeMethod={"resize"}/>
-                                </Pressable>
-                                <Text style={styles.fileName}>{getFileName(item.file)}</Text>
-                            </View>}
-                        {(item.content) && <Text style={styles.content}>{item.content}</Text>}
-                        <Text style={styles.time}>{toReadableTime(currentDateTime)}</Text>
-                    </View>
+                        <View style={styles.contentTimeBlock}>
+                            {(item.file) &&
+                                <View style={styles.fileBlock}>
+                                    <Pressable style={styles.downloadButton} onPress={() => checkPermission()}>
+                                        <Image source={require("@img/chat-icons/download.png")}
+                                               style={styles.downloadButtonIcon}
+                                               resizeMethod={"resize"}/>
+                                    </Pressable>
+                                    <Text style={styles.fileName}>{getFileName(item.file)}</Text>
+                                </View>}
+                            {(item.content) && <Text style={styles.content}>{item.content}</Text>}
+                            <Text style={styles.time}>{toReadableTime(currentDateTime)}</Text>
+                        </View>
+                </View>
+                <View style={{flexDirection: "row", columnGap: 5}}>
+                    <DeleteMessageButton onPress={() => {
+                        console.log(messages[index]);
+                        messages.splice(index, 1);
+                        setChats([...chats]);
+                    }}/>
+                    <ChangeMessageButton onPress={() => {
+
+                    }}/>
                 </View>
             </View>
         </View>
