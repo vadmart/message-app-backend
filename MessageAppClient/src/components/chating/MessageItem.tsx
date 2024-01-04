@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import ReactNativeBlobUtil, {ReactNativeBlobUtilConfig} from "react-native-blob-util"
 import {Alert, Image, PermissionsAndroid, Platform, Pressable, StyleSheet, Text, View} from "react-native"
 import {Message} from "@app/types/MessageType";
@@ -9,15 +9,13 @@ import {useAuth} from "@app/context/AuthContext";
 import {useChat} from "@app/context/ChatContext";
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import {ChangeMessageButton, DeleteMessageButton} from "@app/components/chating/Button";
-import {sortChats} from "@app/components/helpers/sort";
 
-const MessageItem = (props) => {
-    const {index, messages, item}: { index: number, messages: Message[], item: Message } = props;
+const MessageItem = ({index, messages, item, messageForChangeState}:
+                     { index: number,
+                         messages: Message[],
+                         item: Message,
+                         messageForChangeState: {message: Message, setMessageForChange: React.Dispatch<React.SetStateAction<Message>>} }) => {
     const {authState} = useAuth();
-    const currentDateTime = new Date(item.created_at);
-    const previousDateTime = (index > 0) ? new Date(messages[index - 1].created_at) : new Date(-100);
-    const nextDateTime = (index < messages.length - 1) ? new Date(messages[index + 1].created_at) : new Date(-100);
-    const nextSender = (index < messages.length - 1) && messages[index + 1].sender;
     const {chats, setChats} = useChat();
 
     const downloadFile = () => {
@@ -79,6 +77,10 @@ const MessageItem = (props) => {
         )
     }
 
+    const currentDateTime = new Date(item.created_at);
+    const previousDateTime = (index > 0) ? new Date(messages[index - 1].created_at) : new Date(-100);
+    const nextDateTime = (index < messages.length - 1) ? new Date(messages[index + 1].created_at) : new Date(-100);
+    const nextSender = (index < messages.length - 1) && messages[index + 1].sender;
     return (
         <View>
             {(currentDateTime.getDate() !== previousDateTime.getDate() ||
@@ -96,10 +98,9 @@ const MessageItem = (props) => {
                         || item.sender.username !== nextSender.username) ?
                         <Avatar user={item.sender}/> : null}
                 </View>
-                <View style={{
-                    ...styles.rightBlock, ...(authState.user.public_id == item.sender.public_id && {alignItems: "flex-end"})
-                }}>
-                        <View style={styles.contentTimeBlock}>
+                <View style={[styles.rightBlock,
+                    (authState.user.public_id == item.sender.public_id && {alignItems: "flex-end"})]}>
+                        <View style={[styles.contentTimeBlock, (item == messageForChangeState.message && {backgroundColor: "#4477FF"})]}>
                             {(item.file) &&
                                 <View style={styles.fileBlock}>
                                     <Pressable style={styles.downloadButton} onPress={() => checkPermission()}>
@@ -113,6 +114,7 @@ const MessageItem = (props) => {
                             <Text style={styles.time}>{toReadableTime(currentDateTime)}</Text>
                         </View>
                 </View>
+                {authState.user.public_id == item.sender.public_id &&
                 <View style={{flexDirection: "row", columnGap: 5}}>
                     <DeleteMessageButton onPress={() => {
                         console.log(messages[index]);
@@ -120,9 +122,9 @@ const MessageItem = (props) => {
                         setChats([...chats]);
                     }}/>
                     <ChangeMessageButton onPress={() => {
-
+                        messageForChangeState.setMessageForChange(item);
                     }}/>
-                </View>
+                </View>}
             </View>
         </View>
     )

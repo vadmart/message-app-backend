@@ -9,7 +9,7 @@ export const Button = ({text, bgColor, fontColor="black", onPress}: {text: strin
                                                              onPress: () => void}) => {
     return (
         <Pressable style={{backgroundColor: bgColor,
-                           padding: 10,
+                           padding: 5,
                            alignItems: "center",
                            justifyContent: "center",
                            borderRadius: 10}}

@@ -1,7 +1,7 @@
 import {User} from "@app/types/UserType";
 
 export interface MessageInfo {
-    public_id: string,
+    public_id?: string,
     chat: string,
     sender: User,
     created_at: string,

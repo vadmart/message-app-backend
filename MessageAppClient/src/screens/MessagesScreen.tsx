@@ -39,12 +39,19 @@ const MessagesScreen = memo(({route, navigation}) => {
             previous: string,
             results: Message[]
         }>({count: null, next: null, previous: null, results: null});
-
+    const messageForChangeState: {message: Message,
+                                  setMessageForChange: React.Dispatch<React.SetStateAction<Message>>} = {message: null,
+                                                                                             setMessageForChange: null};
+    [messageForChangeState.message, messageForChangeState.setMessageForChange] = useState(null);
 
     const renderMessage = (props) => {
         // console.log(props);
         if (!payload.chatData.messages) return;
-        return <MessageItem index={props.index} messages={payload.chatData.messages} item={props.item} />
+        return <MessageItem index={props.index}
+                            messages={payload.chatData.messages}
+                            item={props.item}
+                            messageForChangeState={messageForChangeState}
+                            />
     }
 
     const getResponseMessagesData = async (url: string) => {
@@ -71,6 +78,45 @@ const MessagesScreen = memo(({route, navigation}) => {
         setIsRefresh(false);
     }
 
+    const sendMessage = async(method="POST", message: Message) => {
+        const formData = new FormData();
+        if (message.public_id) {
+            formData.append("public_id", message.public_id);
+        }
+        if (message.content) {
+            formData.append("content", message.content);
+        }
+        if (message.file) {
+            formData.append("file", message.file);
+        }
+        if (payload.chatData) {
+            formData.append("chat", payload.chatData.public_id)
+        } else {
+            formData.append("second_user", payload.userData.public_id)
+        }
+        const url = (method == "POST") ? AppBaseURL + "message/" : AppBaseURL + `message/${message.public_id}/`;
+        return axios(url,
+            {
+                method: method,
+                data: formData,
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            })
+    }
+
+    const changeMessage = (message: Message, text=null, singleFile=null) => {
+        message.content = text;
+        message.file = singleFile;
+        setChats([...chats]);
+        sendMessage("PUT", message)
+            .then((response) => {
+                message = response.data;
+                setChats([...chats]);
+            })
+            .catch(() => {message.hasSendingError = true})
+    }
+
     const createMessage = (text=null, singleFile=null) => {
         const arrLength = payload.chatData.messages.push({
             created_at: new Date().toString(),
@@ -83,33 +129,12 @@ const MessagesScreen = memo(({route, navigation}) => {
         });
         // changeChatInChats(payload.chatData);
         setChats([...chats.sort(sortChats)]);
-        sendMessage(text, singleFile)
+        sendMessage("POST", {...payload.chatData.messages[arrLength - 1], public_id: null})
             .then((response) => {
                 payload.chatData.messages[arrLength - 1] = response.data;
                 setChats([...chats.sort(sortChats)])
             })
             .catch(() => {payload.chatData.messages[arrLength - 1].hasSendingError = true});
-    }
-
-    const sendMessage = async(text="", singleFile=null) => {
-        const formData = new FormData();
-        if (text) {
-            formData.append("content", text);
-        }
-        if (singleFile) {
-            // @ts-ignore
-            formData.append("file", singleFile);
-        }
-        if (payload.chatData) {
-            formData.append("chat", payload.chatData.public_id)
-        } else {
-            formData.append("second_user", payload.userData.public_id)
-        }
-        return axios.post(AppBaseURL + "message/", formData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
-        })
     }
 
     useEffect(() => {
@@ -151,7 +176,7 @@ const MessagesScreen = memo(({route, navigation}) => {
                 for (let i = messages.length - 1; i >= 0; --i) {
                     if (messages[i].hasSendingError == true) {
                         delete messages[i].hasSendingError;
-                        sendMessage(messages[i].content, messages[i].file)
+                        sendMessage("POST", messages[i])
                             .then((response) => {
                                 Object.keys(messages[i]).forEach(key => {
                                     messages[i][key] = response.data[key];
@@ -159,7 +184,7 @@ const MessagesScreen = memo(({route, navigation}) => {
                                 setChats([...chats.sort(sortChats)])
                             })
                             .catch((e) => {messages[i].hasSendingError = true});
-                    } else break
+                    }
                 }
             }
         });
@@ -180,7 +205,9 @@ const MessagesScreen = memo(({route, navigation}) => {
                 refreshing={isRefresh}
             />
             <View style={styles.footer}>
-                <ChatKeyboard onCreateMessage={createMessage}/>
+                <ChatKeyboard onCreateMessage={createMessage}
+                              onChangeMessage={changeMessage}
+                              messageForChangeState={messageForChangeState} />
             </View>
         </View>
     )

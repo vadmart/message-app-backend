@@ -4,8 +4,14 @@ import { AppBaseURL } from "@app/config";
 import {StyleSheet, TextInput, View, Pressable, Image, Text} from "react-native"
 import DocumentPicker, {DocumentPickerResponse} from "react-native-document-picker"
 import {useChat} from "@app/context/ChatContext";
+import {Message} from "@app/types/MessageType";
+import * as fs from "fs";
 
-const ChatKeyboard = ({onCreateMessage}) => {
+const ChatKeyboard = ({onCreateMessage, onChangeMessage, messageForChangeState}:
+                          {onCreateMessage: Function,
+                              onChangeMessage: Function
+                        messageForChangeState: {message: Message,
+                                  setMessageForChange: React.Dispatch<React.SetStateAction<Message>>}}) => {
     const [singleFile, setSingleFile] = useState<DocumentPickerResponse>(null);
     const [inputtedData, setInputtedData] = useState("");
     const inputFieldRef = useRef(null);
@@ -32,14 +38,20 @@ const ChatKeyboard = ({onCreateMessage}) => {
                 {singleFile && <Text style={styles.fileName}>{singleFile.name}</Text>}
                 <View style={styles.keyboardBlock}>
                     <TextInput style={styles.keyboard}
-                                ref={inputFieldRef}
-                                onChangeText={(text) => {setInputtedData(text)}}
-                                placeholder={"Type some text..."}
+                               ref={inputFieldRef}
+                               onChangeText={(text) => {setInputtedData(text)}}
+                               placeholder={"Type some text..."}
+                               defaultValue={messageForChangeState.message?.content}
                     />
                     <View style={styles.optionsBlock}>
                         <Pressable
                                     onPress={() => {
-                                        onCreateMessage(inputtedData, singleFile);
+                                        if (messageForChangeState.message) {
+                                            onChangeMessage(messageForChangeState.message, inputtedData, singleFile)
+                                            messageForChangeState.setMessageForChange(null);
+                                        } else {
+                                            onCreateMessage(inputtedData, singleFile);
+                                        }
                                         inputFieldRef.current.clear();
                                         setInputtedData("");
                                         setSingleFile(null);
