@@ -45,8 +45,8 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        last_message = Message.objects.filter(chat__public_id=rep["public_id"]).first()
-        rep["messages"] = [MessageSerializer(last_message).data]
+        messages = Message.objects.filter(chat__public_id=rep["public_id"])[:20]
+        rep["messages"] = MessageSerializer(messages, many=True).data
         return rep
 
     def save(self, **kwargs):
