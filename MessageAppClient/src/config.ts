@@ -1,6 +1,8 @@
 import { OneSignal, LogLevel } from "react-native-onesignal";
 
-export const AppBaseURL = "https://9320-178-150-167-216.ngrok-free.app/api/v1/";
+export const BaseHTTPURL = "https://0f58-178-150-167-216.ngrok-free.app/api/v1/";
+
+export const BaseWebsocketURL = "wss://0f58-178-150-167-216.ngrok-free.app/msg/";
 
 const ScreenNames = {
     REGISTRATION: "Registration",

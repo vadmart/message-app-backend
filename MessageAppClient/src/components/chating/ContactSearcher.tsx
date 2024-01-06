@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {Image, Pressable, StyleSheet, Text, TextInput, View} from "react-native";
 import axios from "axios";
-import {AppBaseURL} from "@app/config";
+import {BaseHTTPURL} from "@app/config";
 import {User} from "@app/types/UserType";
 import ScreenNames from "@app/config";
 
@@ -14,10 +14,10 @@ const ContactSearcher = ({navigation}) => {
             setError("This field might not be empty!");
             return
         }
-        axios.get(AppBaseURL + `user/${encodeURIComponent(phoneNumber)}`)
+        axios.get(BaseHTTPURL + `user/${encodeURIComponent(phoneNumber)}`)
             .then((response) => {
                 const userData: User = response.data;
-                axios.get(AppBaseURL + `chat/get_chat_by_user/?phone_number=${encodeURIComponent(phoneNumber)}`)
+                axios.get(BaseHTTPURL + `chat/get_chat_by_user/?phone_number=${encodeURIComponent(phoneNumber)}`)
                     .then((resp) => {
                         navigation.navigate(ScreenNames.MESSAGES_SCREEN, {payload: {chatData: resp.data, title: userData.username}})
                     })

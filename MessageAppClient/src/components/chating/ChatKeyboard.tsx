@@ -1,6 +1,6 @@
 import React, {useRef, useState} from "react"
 import axios from "axios";
-import { AppBaseURL } from "@app/config";
+import { BaseHTTPURL } from "@app/config";
 import {StyleSheet, TextInput, View, Pressable, Image, Text} from "react-native"
 import DocumentPicker, {DocumentPickerResponse} from "react-native-document-picker"
 import {useChat} from "@app/context/ChatContext";

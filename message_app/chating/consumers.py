@@ -5,7 +5,6 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import QuerySet
-from rest_framework.utils.serializer_helpers import ReturnDict
 
 from message_app.auth.user.models import User
 from message_app.chating.models import Chat
@@ -23,11 +22,6 @@ def aget_chat(sender: User, receiver: User) -> Coroutine:
     if not chats:
         chats = QuerySet(Chat.objects.create(first_user=sender, second_user=receiver))
     return chats[0]
-
-
-@database_sync_to_async
-def async_chat_serializing(chat: QuerySet[Chat] | Chat, many=False) -> ReturnDict:
-    return ChatSerializer(chat, many=many).data
 
 
 @database_sync_to_async
@@ -49,8 +43,9 @@ class MessageConsumer(AsyncWebsocketConsumer):
         chats = await get_chats_by_user(user)
         async for chat in chats:
             await self.channel_layer.group_add(f"{chat.public_id}", self.channel_name)
-        await self.send(text_data=json.dumps({"chats": await async_chat_serializing(chats, many=True)}))
-        # print((await serialize_chats(chats)))
+        await self.send(text_data=json.dumps(
+            {"chats": await database_sync_to_async(lambda: ChatSerializer(chats, many=True).data)()}))
+
     async def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
         action = text_data_json.get("action")

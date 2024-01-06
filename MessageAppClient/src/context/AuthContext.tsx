@@ -1,6 +1,6 @@
 import React, {createContext, useContext, useEffect, useState} from "react"
 import {storage} from "@app/components/Storage"
-import {AppBaseURL} from "@app/config";
+import {BaseHTTPURL} from "@app/config";
 import axios from "axios";
 import {BaseURL} from "@app/components/AccountForm/Login/BaseURL";
 import {OneSignal} from "react-native-onesignal";
@@ -60,7 +60,7 @@ export const AuthProvider = ({children}) => {
 
     const login = async (username: string, phoneNumber: string) => {
         try {
-            return await axios.post(AppBaseURL + "auth/login/",
+            return await axios.post(BaseHTTPURL + "auth/login/",
                 {username, phone_number: "+380" + phoneNumber});
         } catch (e) {
             return {error: true, msg: (e).response.data}

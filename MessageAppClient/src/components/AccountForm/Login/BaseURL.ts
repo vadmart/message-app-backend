@@ -1,3 +1,3 @@
-import { AppBaseURL } from "../../../config";
+import { BaseHTTPURL } from "../../../config";
 
-export const BaseURL = AppBaseURL + "auth/login/";
+export const BaseURL = BaseHTTPURL + "auth/login/";

@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState, memo} from "react"
 import {FlatList, StyleSheet, View} from "react-native";
-import {AppBaseURL} from "@app/config";
+import {BaseHTTPURL} from "@app/config";
 import axios from 'axios';
 import {Message} from "@app/types/MessageType";
 import ChatKeyboard from "@app/components/chating/ChatKeyboard";
@@ -14,7 +14,7 @@ import NetInfo from "@react-native-community/netinfo";
 
 const markMessageAsRead = async (message_id: string) => {
     try {
-        const response = await axios.post(AppBaseURL + `message/${message_id}/read/`);
+        const response = await axios.post(BaseHTTPURL + `message/${message_id}/read/`);
         console.log(`Message ${message_id} was marked as read`);
         return response
     } catch (e) {
@@ -94,7 +94,7 @@ const MessagesScreen = memo(({route, navigation}) => {
         } else {
             formData.append("second_user", payload.userData.public_id)
         }
-        const url = (method == "POST") ? AppBaseURL + "message/" : AppBaseURL + `message/${message.public_id}/`;
+        const url = (method == "POST") ? BaseHTTPURL + "message/" : BaseHTTPURL + `message/${message.public_id}/`;
         return axios(url,
             {
                 method: method,
@@ -145,7 +145,7 @@ const MessagesScreen = memo(({route, navigation}) => {
         // if we have only user data and no chat data, we won't receive messages, because they obviously don't exist
         if (!payload.chatData) return;
         if (!payload.chatData.areMessagesFetched) {
-            getResponseMessagesData(AppBaseURL + `chat/${payload.chatData.public_id}/message/`)
+            getResponseMessagesData(BaseHTTPURL + `chat/${payload.chatData.public_id}/message/`)
             .then((results) => {
                 payload.chatData.messages = results.sort(sortMessages);
                 payload.chatData.areMessagesFetched = true;
