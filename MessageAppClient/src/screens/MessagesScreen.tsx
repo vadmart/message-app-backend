@@ -23,7 +23,7 @@ const markMessageAsRead = async (message_id: string) => {
 }
 
 // @ts-ignore
-const MessagesScreen = memo(({route, navigation}) => {
+const MessagesScreen = ({route, navigation}) => {
     console.log("Rendering MessagesScreen");
     const messageListRef = useRef(null);
     const {chats, setChats} = useChat();
@@ -118,23 +118,23 @@ const MessagesScreen = memo(({route, navigation}) => {
     }
 
     const createMessage = (text=null, singleFile=null) => {
-        const arrLength = payload.chatData.messages.push({
+        const newMessage = {
             created_at: new Date().toString(),
             chat: payload.chatData.public_id,
             sender: authState.user,
             is_read: false,
             is_edited: false,
             content: text,
-            public_id: Math.random().toString()
-        });
+            public_id: Math.random().toString(),
+            hasSendingError: null
+        };
         // changeChatInChats(payload.chatData);
-        setChats([...chats.sort(sortChats)]);
-        sendMessage("POST", {...payload.chatData.messages[arrLength - 1], public_id: null})
-            .then((response) => {
-                payload.chatData.messages[arrLength - 1] = response.data;
-                setChats([...chats.sort(sortChats)])
-            })
-            .catch(() => {payload.chatData.messages[arrLength - 1].hasSendingError = true});
+        sendMessage("POST", {...newMessage, public_id: null})
+            .catch(() => {
+                newMessage.hasSendingError = true;
+                payload.chatData.messages.push(newMessage);
+                setChats([...chats.sort(sortChats)]);
+            });
     }
 
     useEffect(() => {
@@ -211,7 +211,7 @@ const MessagesScreen = memo(({route, navigation}) => {
             </View>
         </View>
     )
-})
+}
 
 const styles = StyleSheet.create({
     container: {

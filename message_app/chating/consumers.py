@@ -64,7 +64,26 @@ class MessageConsumer(AsyncWebsocketConsumer):
         #     "message": content
         # })
 
-    async def chat_message(self, event):
+    async def create_message(self, event):
+        print(self.channel_name)
+        await self.send(
+            json.dumps({
+                "chat": event["chat"],
+                "message": event["message"],
+                "action": "create"
+            })
+        )
+
+    async def update_message(self, event):
+        await self.send(
+            json.dumps({
+                "chat": event["chat"],
+                "message": event["message"],
+                "action": "update"
+            })
+        )
+
+    async def get_chats(self, event):
         print(event)
         await self.send(
             json.dumps({

@@ -1,3 +1,5 @@
+from asgiref.sync import async_to_sync
+from channels.consumer import get_channel_layer
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
@@ -47,6 +49,7 @@ class ChatViewSet(viewsets.ModelViewSet):
 
 
 class MessageViewSet(viewsets.ModelViewSet):
+    channel_layer = get_channel_layer()
     serializer_class = MessageSerializer
     http_method_names = ["get", "post", "patch", "put", "delete"]
     permission_classes = [IsAuthenticated]
@@ -59,28 +62,38 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Message.objects.filter(chat__public_id=chat_public_id)
 
     def create(self, request, *args, **kwargs):
-        if "chat" in request.data and "second_user" not in request.data:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            OneSignal.Push.create_message_notification(ms=serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        elif "second_user" in request.data and "chat" not in request.data:
+        if "second_user" not in request.data and "chat" not in request.data:
+            return Response("Invalid request: you must provide either 'chat' or 'second_user'",
+                            status=status.HTTP_400_BAD_REQUEST)
+        if "second_user" in request.data and "chat" not in request.data:
             second_user = get_object_or_404(User, public_id=request.data["second_user"])
             chat = Chat.objects.create(first_user=request.user, second_user=second_user)
             request.data["chat"] = chat.public_id
             del request.data["second_user"]
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            OneSignal.Push.create_chat_notification(cs=ChatSerializer(chat))
-            OneSignal.Push.create_message_notification(ms=serializer, only_for_sender=True)
-            headers = self.get_success_headers(serializer.data)
-            return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        else:
-            return Response("Invalid request: you must provide either 'chat' or 'second_user'",
-                            status=status.HTTP_400_BAD_REQUEST)
+        elif "chat" in request.data:
+            chat = Chat.objects.get(public_id=request.data["chat"])
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        message = serializer.save()
+        async_to_sync(self.channel_layer.group_send)(request.data["chat"],
+                                                     {"type": "create_message",
+                                                      "chat": ChatSerializer(chat).data,
+                                                      "message": serializer.data})
+        OneSignal.Push.create_message_notification(message=message)
+        headers = self.get_success_headers(serializer.data)
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        message = serializer.save()
+        async_to_sync(self.channel_layer.group_send)(request.data["chat"],
+                                                     {"type": "update_message",
+                                                      "chat": ChatSerializer(message.chat).data,
+                                                      "message": serializer.data})
+        return Response(serializer.data)
 
     @action(methods=["POST"], detail=True)
     def read(self, request, *args, **kwargs):

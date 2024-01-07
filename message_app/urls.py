@@ -29,5 +29,5 @@ urlpatterns = [
 ]
 
 websocket_patterns = [
-    path("msg/", consumers.MessageConsumer.as_asgi())
+    path("ws/chat/", consumers.MessageConsumer.as_asgi())
 ]

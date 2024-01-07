@@ -8,7 +8,7 @@ import {OneSignal, NotificationWillDisplayEvent} from "react-native-onesignal";
 import {isAMessage, Message} from "@app/types/MessageType";
 import {useAuth} from "@app/context/AuthContext";
 import {sortChats} from "@app/components/helpers/sort";
-import ScreenNames from "@app/config";
+import ScreenNames, {BaseWebsocketURL} from "@app/config";
 
 const Stack = createNativeStackNavigator();
 
@@ -17,35 +17,55 @@ const MainScreen = () => {
     const [chats, setChats] = useState<Chat_[]>([]);
     const chatsState = {chats, setChats};
     const {authState} = useAuth();
-    console.log("MainScreen: ChatsScreen: ");
-    console.log(chats);
-    // useEffect(() => {
-    //     const notificationsListener = (e: NotificationWillDisplayEvent) => {
-    //         console.log("Incoming notification...");
-    //         if (!chats) return;
-    //         const incomingObject= Object.assign(e.notification.additionalData, {content: e.notification.body});
-    //         if (isAMessage(incomingObject)) {
-    //             for (let i = chats.length - 1; i >= 0; --i) {
-    //                 if (chats[i].public_id == incomingObject.chat) {
-    //                     chats[i].messages.push(incomingObject);
-    //                     if (authState.user.username != incomingObject.sender.username) {
-    //                         chats[i].unread_count += 1;
-    //                     }
-    //                     break;
-    //                 }
-    //             }
-    //             chats.sort(sortChats);
-    //             setChats(() => [...chats]);
-    //         } else if (isAChat(incomingObject)) {
-    //             setChats(() => [...chats, incomingObject]);
-    //         }
-    //     }
-    //
-    //     OneSignal.Notifications.addEventListener("foregroundWillDisplay", notificationsListener);
-    //     return () => {
-    //         OneSignal.Notifications.removeEventListener("foregroundWillDisplay", notificationsListener)
-    //     }
-    // }, [chats]);
+    useEffect(() => {
+        const ws = new WebSocket(BaseWebsocketURL + `?token=${authState.access}`);
+        ws.onmessage = (e => {
+            // setChats(JSON.parse(e.data).chats);
+            console.log("OnMessage: ");
+            console.log(e.data);
+            const content = JSON.parse(e.data);
+            if (content.chats) {
+                setChats(content.chats);
+            } else if (content.message) {
+                let currChat: Chat_ = null;
+                for (let i = 0; i < chats.length; ++i) {
+                    if (chats[i].public_id == content.chat.public_id) {
+                        currChat = chats[i];
+                        break;
+                    }
+                }
+                if (currChat === null && content.action == "create") {
+                    setChats([...chats, content.chat])
+                    return
+                }
+                const currMessages = currChat.messages;
+                switch (content.action) {
+                    case "create":
+                        for (let i = currMessages.length - 1; i >= 0; --i) {
+                            if (currMessages[i].public_id == content.message.public_id) {
+                                currMessages[i] = content.message;
+                                setChats([...chats.sort(sortChats)]);
+                                return
+                            }
+                        }
+                        currChat.messages.push(content.message);
+                        break;
+                    case "update":
+                        for (let i = currMessages.length - 1; i >= 0; --i) {
+                            if (currMessages[i].public_id == content.message.public_id) {
+                                currMessages[i] = content.message;
+                                setChats([...chats]);
+                                return;
+                            }
+                        }
+                }
+            }
+
+        })
+        return () => {
+            ws.close();
+        }
+    }, [])
 
     return (
         <ChatProvider value={chatsState}>
