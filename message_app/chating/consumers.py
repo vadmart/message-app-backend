@@ -8,7 +8,8 @@ from django.db.models import QuerySet
 
 from message_app.auth.user.models import User
 from message_app.chating.models import Chat
-from message_app.chating.serializers import ChatSerializer
+from message_app.chating.serializers import ChatSerializer, MessageSerializer
+from asgiref.sync import sync_to_async
 
 
 def filter_chats_by_user(user: User) -> QuerySet[Chat]:
@@ -32,24 +33,26 @@ def get_chats_by_user(user: User) -> QuerySet[Chat]:
 
 class MessageConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        await self.accept()
         if isinstance(self.scope["user"], AnonymousUser):
             await self.send(text_data=json.dumps({"detail": "Your token is invalid or this user does not exist!"}))
-            await self.close()
             return
+        await self.accept()
         chats = await get_chats_by_user(self.scope["user"])
-        async for chat in chats:
-            await self.channel_layer.group_add(str(chat.public_id), self.channel_name)
+        await self.channel_layer.group_add("chat", self.channel_name)
+        # async for chat in chats:
+        #     await self.channel_layer.group_add(str(chat.public_id), self.channel_name)
         await self.send(text_data=json.dumps(
             {"chats": await database_sync_to_async(lambda: ChatSerializer(chats, many=True).data)()}))
 
     async def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
-        action = text_data_json.get("action")
-        chat_id = text_data_json.get("chat_id")
-        if action is None or chat_id is None:
-            await self.send(text_data=json.dumps({"detail": "Both action and chat_id must be set!"}))
-            return
+        ms = MessageSerializer(data=text_data_json)
+        await sync_to_async(ms.is_valid)(raise_exception=True)
+        await sync_to_async(ms.save)(sender=self.scope["user"])
+        await self.channel_layer.group_send(ms.data["chat"], {
+            "type": "create.message",
+            "message": ms.data["content"]
+        })
 
     async def create_message(self, event):
         print(f"Sending message")

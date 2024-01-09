@@ -30,7 +30,8 @@ class MessageSerializer(serializers.ModelSerializer):
     #     return super().to_internal_value(data)
 
     def save(self, **kwargs):
-        kwargs["sender"] = self.context["request"].user
+        if kwargs.get("sender") is None and self.context.get("request"):
+            kwargs["sender"] = self.context["request"].user
         return super().save(**kwargs)
 
 
