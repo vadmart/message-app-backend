@@ -12,6 +12,7 @@ from message_app.chating import OneSignal
 from message_app.chating.models import Message, Chat
 from message_app.chating.serializers import MessageSerializer, ChatSerializer
 
+channel_layer = get_channel_layer()
 
 class ChatViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "delete"]
@@ -49,7 +50,6 @@ class ChatViewSet(viewsets.ModelViewSet):
 
 
 class MessageViewSet(viewsets.ModelViewSet):
-    channel_layer = get_channel_layer()
     serializer_class = MessageSerializer
     http_method_names = ["get", "post", "patch", "put", "delete"]
     permission_classes = [IsAuthenticated]
@@ -62,23 +62,27 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Message.objects.filter(chat__public_id=chat_public_id)
 
     def create(self, request, *args, **kwargs):
-        if "second_user" not in request.data and "chat" not in request.data:
+        if (("second_user" not in request.data and "chat" not in request.data) or
+                ("second_user" in request.data and "chat" in request.data)):
             return Response("Invalid request: you must provide either 'chat' or 'second_user'",
                             status=status.HTTP_400_BAD_REQUEST)
-        if "second_user" in request.data and "chat" not in request.data:
+        websocket_data = {"type": "create.message"}
+        if "second_user" in request.data:
             second_user = get_object_or_404(User, public_id=request.data["second_user"])
             chat = Chat.objects.create(first_user=request.user, second_user=second_user)
-            request.data["chat"] = chat.public_id
-            del request.data["second_user"]
-        elif "chat" in request.data:
-            chat = Chat.objects.get(public_id=request.data["chat"])
-        serializer = self.get_serializer(data=request.data)
+            chat_id = str(chat.public_id)
+        else:
+            chat_id = request.data["chat"]
+        prepared_data = {**request.data.dict(), "second_user": None}
+        serializer = self.get_serializer(data=prepared_data)
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
-        async_to_sync(self.channel_layer.group_send)(request.data["chat"],
-                                                     {"type": "create_message",
-                                                      "chat": ChatSerializer(chat).data,
-                                                      "message": serializer.data})
+        if "second_user" in request.data:
+            websocket_data["chat"] = ChatSerializer(chat).data
+        else:
+            websocket_data["message"] = serializer.data
+        async_to_sync(channel_layer.group_send)(chat_id,
+                                                     websocket_data)
         OneSignal.Push.create_message_notification(message=message)
         headers = self.get_success_headers(serializer.data)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -89,9 +93,8 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         message = serializer.save()
-        async_to_sync(self.channel_layer.group_send)(request.data["chat"],
+        async_to_sync(channel_layer.group_send)(request.data["chat"],
                                                      {"type": "update_message",
-                                                      "chat": ChatSerializer(message.chat).data,
                                                       "message": serializer.data})
         return Response(serializer.data)
 

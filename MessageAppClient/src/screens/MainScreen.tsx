@@ -12,6 +12,14 @@ import ScreenNames, {BaseWebsocketURL} from "@app/config";
 
 const Stack = createNativeStackNavigator();
 
+type WebSocketResponse = {
+    chats?: Chat_[],
+    chat: Chat_,
+    chat_id?: string,
+    message?: Message,
+    action?: "create" | "update" | "delete"
+}
+
 const MainScreen = () => {
     console.log("Rendering MainScreen");
     const [chats, setChats] = useState<Chat_[]>([]);
@@ -20,48 +28,45 @@ const MainScreen = () => {
     useEffect(() => {
         const ws = new WebSocket(BaseWebsocketURL + `?token=${authState.access}`);
         ws.onmessage = (e => {
-            // setChats(JSON.parse(e.data).chats);
             console.log("OnMessage: ");
-            console.log(e.data);
-            const content = JSON.parse(e.data);
-            if (content.chats) {
-                setChats(content.chats);
-            } else if (content.message) {
+            const receivedData: WebSocketResponse = JSON.parse(e.data);
+            console.log(receivedData);
+            if (receivedData.chats) {
+                setChats(receivedData.chats);
+            }
+            else if (receivedData.message) {
                 let currChat: Chat_ = null;
                 for (let i = 0; i < chats.length; ++i) {
-                    if (chats[i].public_id == content.chat.public_id) {
+                    console.log(`Current public_id: ${chats[i].public_id}, expected public_id: ${receivedData.message.chat}`)
+                    if (chats[i].public_id === receivedData.message.chat) {
                         currChat = chats[i];
                         break;
                     }
                 }
-                if (currChat === null && content.action == "create") {
-                    setChats([...chats, content.chat])
+                if (currChat === null) {
+                    console.log("OnMessage: Haven't found any suitable chat");
                     return
                 }
                 const currMessages = currChat.messages;
-                switch (content.action) {
+                switch (receivedData.action) {
                     case "create":
-                        for (let i = currMessages.length - 1; i >= 0; --i) {
-                            if (currMessages[i].public_id == content.message.public_id) {
-                                currMessages[i] = content.message;
-                                setChats([...chats.sort(sortChats)]);
-                                return
-                            }
-                        }
-                        currChat.messages.push(content.message);
+                        console.log("Start handling 'create' action")
+                        currMessages.push(receivedData.message);
+                        setChats([...chats.sort(sortChats)]);
                         break;
                     case "update":
                         for (let i = currMessages.length - 1; i >= 0; --i) {
-                            if (currMessages[i].public_id == content.message.public_id) {
-                                currMessages[i] = content.message;
+                            if (currMessages[i].public_id == receivedData.message.public_id) {
+                                currMessages[i] = receivedData.message;
                                 setChats([...chats]);
                                 return;
                             }
                         }
                 }
             }
-
         })
+        console.log("Chats: ");
+        console.log(chats);
         return () => {
             ws.close();
         }

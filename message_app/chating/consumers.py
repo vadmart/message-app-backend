@@ -31,18 +31,15 @@ def get_chats_by_user(user: User) -> QuerySet[Chat]:
 
 
 class MessageConsumer(AsyncWebsocketConsumer):
-    groups = ["general"]
-
     async def connect(self):
         await self.accept()
-        user = self.scope["user"]
-        if isinstance(user, AnonymousUser):
+        if isinstance(self.scope["user"], AnonymousUser):
             await self.send(text_data=json.dumps({"detail": "Your token is invalid or this user does not exist!"}))
             await self.close()
             return
-        chats = await get_chats_by_user(user)
+        chats = await get_chats_by_user(self.scope["user"])
         async for chat in chats:
-            await self.channel_layer.group_add(f"{chat.public_id}", self.channel_name)
+            await self.channel_layer.group_add(str(chat.public_id), self.channel_name)
         await self.send(text_data=json.dumps(
             {"chats": await database_sync_to_async(lambda: ChatSerializer(chats, many=True).data)()}))
 
@@ -53,31 +50,20 @@ class MessageConsumer(AsyncWebsocketConsumer):
         if action is None or chat_id is None:
             await self.send(text_data=json.dumps({"detail": "Both action and chat_id must be set!"}))
             return
-        match action:
-            case "get":
-                pass
-        # await self.channel_layer.group_send(f"{self.scope['user'].public_id.hex}--client", {
-        #     "type": "chat.message",
-        #     "from": {
-        #         "user_uuid": self.scope["user"].public_id.hex
-        #     },
-        #     "message": content
-        # })
 
     async def create_message(self, event):
-        print(self.channel_name)
+        print(f"Sending message")
         await self.send(
-            json.dumps({
-                "chat": event["chat"],
-                "message": event["message"],
-                "action": "create"
+            text_data=json.dumps({
+                "action": "create",
+                **({"message": event["message"]} if "message" in event else {"chat": event["chat"]})
+                # "message": event["message"],
             })
         )
 
     async def update_message(self, event):
         await self.send(
             json.dumps({
-                "chat": event["chat"],
                 "message": event["message"],
                 "action": "update"
             })
@@ -90,3 +76,8 @@ class MessageConsumer(AsyncWebsocketConsumer):
                 "data": event["data"]
             })
         )
+
+    async def disconnect(self, code):
+        chats = await get_chats_by_user(self.scope["user"])
+        async for chat in chats:
+            await self.channel_layer.group_discard(str(chat.public_id), self.channel_name)

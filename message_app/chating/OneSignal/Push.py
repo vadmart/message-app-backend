@@ -22,8 +22,8 @@ def create_message_notification(message: Message):
         notification = Notification(app_id=os.environ.get("ONESIGNAL_APP_ID"),
                                     include_external_user_ids=subscription_ids,
                                     contents={"en": content},
-                                    headings={"en": message.sender.username}
-                                    )
+                                    headings={"en": message.sender.username},
+                                    data={"chat_id": str(message.chat.public_id)})
 
         # example passing only required values which don't have defaults set
         try:

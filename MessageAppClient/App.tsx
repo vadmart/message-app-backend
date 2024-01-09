@@ -24,7 +24,6 @@ import {GestureHandlerRootView} from "react-native-gesture-handler";
 const Stack = createNativeStackNavigator();
 
 function App() {
-
     return (
             <AuthProvider>
                 <Layout />
