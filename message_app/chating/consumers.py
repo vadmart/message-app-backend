@@ -60,8 +60,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
         await self.send(
             text_data=json.dumps({
                 "action": "create",
-                # **({"message": event["message"]} if "message" in event else {"chat": event["chat"]})
-                "message": event["message"],
+                **({"message": event["message"]} if "message" in event else {"chat": event["chat"]})
             })
         )
 
@@ -70,6 +69,14 @@ class MessageConsumer(AsyncWebsocketConsumer):
             json.dumps({
                 "message": event["message"],
                 "action": "update"
+            })
+        )
+
+    async def destroy_message(self, event):
+        await self.send(
+            json.dumps({
+                "message": event["message"],
+                "action": "destroy"
             })
         )
 

@@ -6,13 +6,13 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
 from message_app.auth.user.models import User
 from message_app.chating import OneSignal
 from message_app.chating.models import Message, Chat
 from message_app.chating.serializers import MessageSerializer, ChatSerializer
 
 channel_layer = get_channel_layer()
+
 
 class ChatViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "delete"]
@@ -64,7 +64,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         if (("second_user" not in request.data and "chat" not in request.data) or
                 ("second_user" in request.data and "chat" in request.data)):
-            return Response("Invalid request: you must provide either 'chat' or 'second_user'",
+            return Response({"detail": "Either 'chat' or 'second_user' must be set!"},
                             status=status.HTTP_400_BAD_REQUEST)
         websocket_data = {"type": "create.message"}
         if "second_user" in request.data:
@@ -82,7 +82,7 @@ class MessageViewSet(viewsets.ModelViewSet):
         else:
             websocket_data["message"] = serializer.data
         async_to_sync(channel_layer.group_send)(chat_id,
-                                                     websocket_data)
+                                                websocket_data)
         OneSignal.Push.create_message_notification(message=message)
         headers = self.get_success_headers(serializer.data)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -92,11 +92,19 @@ class MessageViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
-        message = serializer.save()
+        self.perform_update(serializer)
         async_to_sync(channel_layer.group_send)(request.data["chat"],
-                                                     {"type": "update_message",
-                                                      "message": serializer.data})
+                                                {"type": "update_message",
+                                                 "message": serializer.data})
         return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        async_to_sync(channel_layer.group_send)(str(instance.chat.public_id),
+                                                {"type": "destroy_message",
+                                                 "message": MessageSerializer(instance).data})
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=["POST"], detail=True)
     def read(self, request, *args, **kwargs):

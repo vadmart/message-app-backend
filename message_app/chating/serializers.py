@@ -25,9 +25,10 @@ class MessageSerializer(serializers.ModelSerializer):
         write_only_fields = ["chat"]
 
     def to_internal_value(self, data):
+        ret = super().to_internal_value(data)
         if data.get("content") is None and data.get("file[name]") is None:
-            raise ValidationError({"error": "At least one of content or file is required"})
-        return super().to_internal_value(data)
+            raise ValidationError({"errors": ["At least one of content or file is required"]})
+        return ret
 
     def save(self, **kwargs):
         if kwargs.get("sender") is None and self.context.get("request"):
