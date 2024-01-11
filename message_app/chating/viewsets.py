@@ -81,7 +81,7 @@ class MessageViewSet(viewsets.ModelViewSet):
             websocket_data["chat"] = ChatSerializer(chat).data
         else:
             websocket_data["message"] = serializer.data
-        async_to_sync(channel_layer.group_send)("chat",
+        async_to_sync(channel_layer.group_send)(chat_id,
                                                      websocket_data)
         OneSignal.Push.create_message_notification(message=message)
         headers = self.get_success_headers(serializer.data)

@@ -8,7 +8,6 @@ from onesignal.model.notification import Notification
 
 from message_app.chating.models import Chat, Message
 
-print(os.environ.get('ONESIGNAL_REST_API_KEY'))
 config = Configuration(app_key=os.environ.get('ONESIGNAL_REST_API_KEY'))
 
 

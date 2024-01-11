@@ -1,4 +1,4 @@
-from django.core.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from django.shortcuts import get_object_or_404
 from message_app.auth.user.models import User
@@ -24,10 +24,10 @@ class MessageSerializer(serializers.ModelSerializer):
         exclude = ["id", "edited_at"]
         write_only_fields = ["chat"]
 
-    # def to_internal_value(self, data):
-    #     if data.get("content") is None and data.get("file[name]") is None:
-    #         raise ValidationError("At least one of content or file is required")
-    #     return super().to_internal_value(data)
+    def to_internal_value(self, data):
+        if data.get("content") is None and data.get("file[name]") is None:
+            raise ValidationError({"error": "At least one of content or file is required"})
+        return super().to_internal_value(data)
 
     def save(self, **kwargs):
         if kwargs.get("sender") is None and self.context.get("request"):
