@@ -34,27 +34,14 @@ def get_chats_by_user(user: User) -> QuerySet[Chat]:
 class MessageConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
+        await self.accept()
         if isinstance(self.scope["user"], AnonymousUser):
             await self.send(text_data=json.dumps({"detail": "Your token is invalid or this user does not exist!"}))
+            await self.close()
             return
-        await self.accept()
         chats = await get_chats_by_user(self.scope["user"])
-        # await self.channel_layer.group_add("chat", self.channel_name)
         async for chat in chats:
             await self.channel_layer.group_add(str(chat.public_id), self.channel_name)
-        await self.send(text_data=json.dumps(
-            {"chats": await database_sync_to_async(lambda: ChatSerializer(chats, many=True).data)()}))
-
-    # async def receive(self, text_data=None, bytes_data=None):
-    #     print("Received message:", text_data)
-    #     text_data_json = json.loads(text_data)
-    #     ms = MessageSerializer(data=text_data_json)
-    #     await sync_to_async(ms.is_valid)(raise_exception=True)
-    #     await sync_to_async(ms.save)(sender=self.scope["user"])
-    #     await self.channel_layer.group_send("chat", {
-    #         "type": "create.message",
-    #         "message": ms.data
-    #     })
 
     async def create_message(self, event):
         await self.send(
