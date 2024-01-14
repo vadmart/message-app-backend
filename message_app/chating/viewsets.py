@@ -62,25 +62,24 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Message.objects.filter(chat__public_id=chat_public_id)
 
     def create(self, request, *args, **kwargs):
-        if (("second_user" not in request.data and "chat" not in request.data) or
-                ("second_user" in request.data and "chat" in request.data)):
-            return Response({"detail": "Either 'chat' or 'second_user' must be set!"},
-                            status=status.HTTP_400_BAD_REQUEST)
         websocket_data = {"type": "create.message"}
-        if "second_user" in request.data:
+        if "chat" in request.data:
+            chat_id = request.data["chat"]
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            message = serializer.save()
+            websocket_data["message"] = serializer.data
+        elif "second_user" in request.data:
             second_user = get_object_or_404(User, public_id=request.data["second_user"])
             chat = Chat.objects.create(first_user=request.user, second_user=second_user)
             chat_id = str(chat.public_id)
-        else:
-            chat_id = request.data["chat"]
-        prepared_data = {**request.data.dict(), "second_user": None}
-        serializer = self.get_serializer(data=prepared_data)
-        serializer.is_valid(raise_exception=True)
-        message = serializer.save()
-        if "second_user" in request.data:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            message = serializer.save()
             websocket_data["chat"] = ChatSerializer(chat).data
         else:
-            websocket_data["message"] = serializer.data
+            return Response({"detail": "Either 'chat' or 'second_user' must be set!"},
+                            status=status.HTTP_400_BAD_REQUEST)
         async_to_sync(channel_layer.group_send)(chat_id,
                                                 websocket_data)
         OneSignal.Push.create_message_notification(message=message)
