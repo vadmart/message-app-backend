@@ -22,7 +22,9 @@ def create_message_notification(message: Message):
                                     include_external_user_ids=subscription_ids,
                                     contents={"en": content},
                                     headings={"en": message.sender.username},
-                                    data={"chat_id": str(message.chat.public_id)})
+                                    data={"chat_id": str(message.chat.public_id)},
+                                    android_group=message.sender.username,
+                                    android_group_message=message.sender.username)
 
         # example passing only required values which don't have defaults set
         try:
