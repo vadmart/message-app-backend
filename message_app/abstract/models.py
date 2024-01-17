@@ -26,7 +26,7 @@ class AbstractManager(models.Manager):
 class AbstractModel(models.Model):
     public_id = models.UUIDField(db_index=True, editable=False, unique=True, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
-    edited_at = models.DateTimeField(auto_now=True)
+    edited_at = models.DateTimeField(null=True, blank=True)
 
     objects = AbstractManager()
 
