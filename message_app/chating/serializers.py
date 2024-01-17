@@ -17,7 +17,6 @@ class ChatRelatedField(serializers.SlugRelatedField):
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
-    chat = ChatRelatedField(queryset=Chat.objects.all(), many=False)
 
     class Meta:
         model = Message
@@ -47,8 +46,8 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        messages = Message.objects.filter(chat__public_id=rep["public_id"]).first()
-        rep["messages"] = [MessageSerializer(messages).data]
+        messages = Message.objects.filter(object_id=rep["public_id"]).first()
+        rep["messages"] = [MessageSerializer(messages).data] if messages else []
         return rep
 
     def save(self, **kwargs):

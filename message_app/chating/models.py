@@ -25,8 +25,8 @@ class Chat(AbstractModel):
 
 class Message(AbstractModel):
     content_type = models.ForeignKey(to=ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey()
+    object_id = models.UUIDField()
+    content_object = GenericForeignKey(fk_field="public_id")
     sender = models.ForeignKey(to=User, on_delete=models.CASCADE)
     content = models.TextField(null=True, blank=True)
     file = models.FileField(upload_to=path_upload_to, null=True, blank=True)
