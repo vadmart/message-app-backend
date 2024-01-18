@@ -13,20 +13,10 @@ def path_upload_to(instance, filename):
     return f"{instance.sender.public_id}/{filename}"
 
 
-class Chat(AbstractModel):
-    first_user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="first_user")
-    second_user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="second_user")
-    edited_at = None
-
-    class Meta:
-        constraints = [models.UniqueConstraint(fields=("first_user", "second_user"),
-                                               name="unique_first_and_second_users")]
-
-
 class Message(AbstractModel):
     content_type = models.ForeignKey(to=ContentType, on_delete=models.CASCADE)
-    object_id = models.UUIDField()
-    content_object = GenericForeignKey(fk_field="public_id")
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey()
     sender = models.ForeignKey(to=User, on_delete=models.CASCADE)
     content = models.TextField(null=True, blank=True)
     file = models.FileField(upload_to=path_upload_to, null=True, blank=True)
@@ -45,6 +35,17 @@ class Message(AbstractModel):
 
     class Meta:
         ordering = ["-created_at"]
+
+
+class Chat(AbstractModel):
+    first_user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="first_user")
+    second_user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="second_user")
+    edited_at = None
+    messages = GenericRelation(to=Message)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=("first_user", "second_user"),
+                                               name="unique_first_and_second_users")]
 
 
 class GroupChat(AbstractModel):

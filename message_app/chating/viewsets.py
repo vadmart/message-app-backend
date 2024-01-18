@@ -54,12 +54,13 @@ class MessageViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "patch", "put", "delete"]
     permission_classes = [IsAuthenticated]
     lookup_field = "public_id"
+    queryset = Message.objects.all()
 
-    def get_queryset(self):
-        chat_public_id = self.kwargs.get("chat_public_id")
-        if chat_public_id is None:
-            return Message.objects.all()
-        return Message.objects.filter(chat__public_id=chat_public_id)
+    # def get_queryset(self):
+    #     chat_public_id = self.kwargs.get("chat_public_id")
+    #     if chat_public_id is None:
+    #         return Message.objects.all()
+    #     return Message.objects.filter()
 
     def create(self, request, *args, **kwargs):
         websocket_data = {"type": "create.message"}
