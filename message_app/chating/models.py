@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
@@ -28,7 +29,7 @@ class Message(AbstractModel):
         return f"Sender: {self.sender}, content: {self.content}"
 
     def save(self, *args, **kwargs):
-        if self.public_id:
+        if self.pk:
             self.edited_at = timezone.now()
             self.is_edited = True
         return super().save(*args, **kwargs)
@@ -41,7 +42,7 @@ class Chat(AbstractModel):
     first_user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="first_user")
     second_user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="second_user")
     edited_at = None
-    messages = GenericRelation(to=Message)
+    messages = GenericRelation(to=Message, related_query_name="chat")
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=("first_user", "second_user"),
@@ -54,9 +55,10 @@ class GroupChat(AbstractModel):
         EXTENDED = "ext", _("Розширений")
 
     creator = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="created_groupchats")
+    name = models.CharField(max_length=30)
     users = models.ManyToManyField(to=User, through="Membership", related_name="groupchats")
     chat_type = models.CharField(choices=ChatType.choices)
-    messages = GenericRelation(to=Message)
+    messages = GenericRelation(to=Message, related_query_name="group_chat")
     edited_at = None
 
     # def clean(self):

@@ -4,12 +4,14 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from message_app.auth.user.models import User
 from message_app.chating import OneSignal
 from message_app.chating.models import Message, Chat
 from message_app.chating.serializers import MessageSerializer, ChatSerializer
+from message_app.auth.permissions import MessageUserPermission
 
 channel_layer = get_channel_layer()
 
@@ -52,36 +54,22 @@ class ChatViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     http_method_names = ["get", "post", "patch", "put", "delete"]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [MessageUserPermission]
     lookup_field = "public_id"
     queryset = Message.objects.all()
 
-    # def get_queryset(self):
-    #     chat_public_id = self.kwargs.get("chat_public_id")
-    #     if chat_public_id is None:
-    #         return Message.objects.all()
-    #     return Message.objects.filter()
+    def get_queryset(self):
+        chat_public_id = self.kwargs.get("chat_public_id")
+        return Message.objects.filter(chat__public_id=chat_public_id)
 
     def create(self, request, *args, **kwargs):
         websocket_data = {"type": "create.message"}
-        if "chat" in request.data:
-            chat_id = request.data["chat"]
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            message = serializer.save()
-            websocket_data["message"] = serializer.data
-        elif "second_user" in request.data:
-            second_user = get_object_or_404(User, public_id=request.data["second_user"])
-            chat = Chat.objects.create(first_user=request.user, second_user=second_user)
-            chat_id = str(chat.public_id)
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            message = serializer.save()
-            websocket_data["chat"] = ChatSerializer(chat).data
-        else:
-            return Response({"detail": "Either 'chat' or 'second_user' must be set!"},
-                            status=status.HTTP_400_BAD_REQUEST)
-        async_to_sync(channel_layer.group_send)(chat_id,
+        chat_public_id = self.kwargs.get("chat_public_id")
+        serializer = self.get_serializer(data=request.data, context={"request": request, "kwargs": self.kwargs})
+        serializer.is_valid(raise_exception=True)
+        message = serializer.save(sender=request.user)
+        websocket_data["message"] = serializer.data
+        async_to_sync(channel_layer.group_send)(chat_public_id,
                                                 websocket_data)
         OneSignal.Push.create_message_notification(message=message)
         headers = self.get_success_headers(serializer.data)

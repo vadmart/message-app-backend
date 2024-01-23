@@ -11,7 +11,6 @@ from message_app.chating import consumers
 
 router = SimpleRouter()
 router.register("chat", ChatViewSet, basename="chat")
-router.register("message", MessageViewSet, basename="message")
 router.register("auth/register", RegisterViewSet, basename="auth-register")
 router.register("user", UserViewSet, basename="user")
 

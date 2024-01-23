@@ -1,3 +1,4 @@
+from django.http import QueryDict
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from message_app.auth.user.serializers import UserSerializer
@@ -22,29 +23,25 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         instance = super().to_representation(instance)
+        instance["chat"] = str(instance["chat"])
         del instance["content_type"]
         del instance["object_id"]
         return instance
 
-    def to_internal_value(self, data):
-        if data.get("content") is None and data.get("file[name]") is None:
-            raise ValidationError({"errors": ["At least one of content or file is required"]})
-        if data.get("chat") is None:
-            raise ValidationError({"chat": "This field is required"})
-        chat = Chat.objects.filter(public_id=data.get("chat"))
-        if chat.exists():
-            chat = chat[0]
-        else:
-            chat = get_object_or_404(GroupChat, public_id=data.get("public_id"))
-        content_type = ContentType.objects.get(model=type(chat).__name__.lower(), app_label="message_app_chating")
-        data_to_save = {**data, "content_type": content_type.pk, "object_id": chat.pk}
-        ret = super().to_internal_value(data_to_save)
-        return ret
+    def validate(self, data):
+        if "content" not in data and "file[name]" not in data:
+            raise ValidationError("At least one of content or file is required")
+        return super().validate(data)
 
-    def save(self, **kwargs):
-        if kwargs.get("sender") is None and self.context.get("request"):
-            kwargs["sender"] = self.context["request"].user
-        return super().save(**kwargs)
+    def to_internal_value(self, data):
+        if isinstance(data, QueryDict):
+            data = data.dict()
+        chat = Chat.objects.get(public_id=self.context["kwargs"]["chat_public_id"])
+        content_type = ContentType.objects.get_for_model(Chat)
+        data_to_save = {**data,
+                        "content_type": content_type.pk,
+                        "object_id": chat.pk}
+        return super().to_internal_value(data_to_save)
 
 
 class MessageRelationRelatedField(serializers.RelatedField):
@@ -56,11 +53,11 @@ class MessageRelationRelatedField(serializers.RelatedField):
 class ChatSerializer(serializers.ModelSerializer):
     first_user = UserSerializer(read_only=True)
     second_user = UserSerializer(read_only=True)
-    messages = MessageRelationRelatedField(queryset=Message.objects.all(), many=True)
+    messages = MessageSerializer(many=True, required=False)
 
     class Meta:
         model = Chat
-        fields = ["public_id", "first_user", "second_user", "created_at", "messages"]
+        exclude = ["id", "created_at"]
         read_only_fields = ["public_id", "created_at"]
 
     def save(self, **kwargs):

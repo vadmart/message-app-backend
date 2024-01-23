@@ -78,9 +78,6 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'messenger.wsgi.application'
-ASGI_APPLICATION = 'messenger.asgi.application'
-
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = "media/"
 
@@ -174,3 +171,6 @@ REST_FRAMEWORK = {
 }
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+WSGI_APPLICATION = 'messenger.wsgi.application'
+ASGI_APPLICATION = 'messenger.asgi.application'
