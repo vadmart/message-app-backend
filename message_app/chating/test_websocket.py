@@ -1,3 +1,5 @@
+import asyncio
+
 from channels.testing import WebsocketCommunicator, ChannelsLiveServerTestCase
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import AccessToken
@@ -19,6 +21,13 @@ class WebSocketTestCase(ChannelsLiveServerTestCase):
         self.token3 = AccessToken.for_user(self.u3)
         self.client = RequestsClient()
         self.client.headers["Authorization"] = f"Bearer {self.token1}"
+
+    async def test_websocket_connect(self):
+        communicator = WebsocketCommunicator(application,
+                                             self.live_server_ws_url + f"/ws/chat/?token={self.token1}")
+        connected, subprotocol = await communicator.connect()
+        self.assertTrue(connected)
+        await communicator.disconnect()
 
     async def test_websocket_after_message_create(self):
         communicator1 = WebsocketCommunicator(application,
@@ -44,9 +53,10 @@ class WebSocketTestCase(ChannelsLiveServerTestCase):
         self.assertEqual(ws_frame1["action"], "create")
         self.assertEqual(ws_frame2["action"], "create")
         try:
-            await communicator3.receive_from()
-        except Exception as e:
-            print("There is no message for user 3")
+            await communicator2.receive_from()
+            raise Exception("User 3 got message and it's not a correct behaviour!")
+        except asyncio.TimeoutError:
+            print("There is no message for user 3 and it's correct")
         await communicator1.disconnect()
         await communicator2.disconnect()
         await communicator3.disconnect()
