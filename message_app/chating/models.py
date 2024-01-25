@@ -47,6 +47,7 @@ class Chat(AbstractModel):
     class Meta:
         constraints = [models.UniqueConstraint(fields=("first_user", "second_user"),
                                                name="unique_first_and_second_users")]
+        ordering = ["-created_at"]
 
 
 class GroupChat(AbstractModel):

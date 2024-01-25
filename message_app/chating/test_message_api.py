@@ -48,7 +48,8 @@ class MessageApiTestCase(TestCase):
         message_data = {
             "content": "Hello"
         }
-        resp = self.client.post(f"/api/v1/chat/{self.first_private_chat.public_id}/message/", message_data)
+        resp = self.client.post(f"/api/v1/chat/{self.first_private_chat.public_id}/message/", message_data,
+                                content_type="multipart/form-data")
         self.assertEqual(resp.status_code, 201)
         message_id = resp.json()["public_id"]
         message = Message.objects.get(public_id=message_id)

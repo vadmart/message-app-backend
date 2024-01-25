@@ -2,9 +2,10 @@ from django.http import QueryDict
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from message_app.auth.user.serializers import UserSerializer
-from message_app.chating.models import Message, Chat, GroupChat
-from django.shortcuts import get_object_or_404
+from message_app.chating.models import Message, Chat
+from django.core.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
+from rest_framework.reverse import reverse
 
 
 class ContentObjectRelatedField(serializers.SlugRelatedField):
@@ -53,7 +54,7 @@ class MessageRelationRelatedField(serializers.RelatedField):
 class ChatSerializer(serializers.ModelSerializer):
     first_user = UserSerializer(read_only=True)
     second_user = UserSerializer(read_only=True)
-    messages = MessageSerializer(many=True, required=False)
+    messages = serializers.SerializerMethodField()
 
     class Meta:
         model = Chat
@@ -63,5 +64,10 @@ class ChatSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         kwargs["first_user"] = self.context["request"].user
         return super().save(**kwargs)
+
+    def get_messages(self, obj):
+        messages_data = {"results": MessageSerializer(Message.objects.filter(chat__public_id=obj.public_id)[:5][::-1],
+                                                      many=True).data}
+        return messages_data
 
 # "2023-10-15T15:40:19.209225Z"

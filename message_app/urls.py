@@ -23,8 +23,7 @@ urlpatterns = [
     path("auth/login/verify/", UserVerifyView.as_view(), name="auth-login-verify"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="auth-refresh"),
     path("auth/token/verify/", TokenVerifyView.as_view(), name="auth-token-verify"),
-    path("", include(router.urls)),
-    path("", include(chat_router.urls))
+    path("", include([*router.urls, *chat_router.urls]))
 ]
 
 websocket_patterns = [
