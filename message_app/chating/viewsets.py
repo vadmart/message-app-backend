@@ -26,15 +26,8 @@ class ChatViewSet(viewsets.ModelViewSet):
     def get_queryset(self) -> QuerySet:
         return Chat.objects.filter(Q(first_user=self.request.user) | Q(second_user=self.request.user))
 
-        # page = self.messages_paginator.paginate_queryset(queryset=Message.objects.all(), request=request)
-        # messages = MessageSerializer(page, many=True).data
-        # resp.data["messages"] = self.messages_paginator.get_paginated_response(messages)
-        # return resp
-        # for chat in serializer.data:
-        #     unread_count = Message.objects.filter(Q(object_id=chat["public_id"]) &
-        #                                           ~Q(sender=request.user) &
-        #                                           Q(is_read=False)).count()
-        #     chat["unread_count"] = unread_count
+    # def list(self, request, *args, **kwargs):
+    #     pass
 
     @action(detail=False)
     def get_chat_by_user(self, request):

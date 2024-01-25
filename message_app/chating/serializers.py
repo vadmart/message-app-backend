@@ -3,9 +3,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from message_app.auth.user.serializers import UserSerializer
 from message_app.chating.models import Message, Chat
-from django.core.paginator import Paginator
 from django.contrib.contenttypes.models import ContentType
-from rest_framework.reverse import reverse
+from django.db.models import Q
 
 
 class ContentObjectRelatedField(serializers.SlugRelatedField):
@@ -30,7 +29,7 @@ class MessageSerializer(serializers.ModelSerializer):
         return instance
 
     def validate(self, data):
-        if "content" not in data and "file[name]" not in data:
+        if "content" not in data and "file" not in data:
             raise ValidationError("At least one of content or file is required")
         return super().validate(data)
 
@@ -66,8 +65,10 @@ class ChatSerializer(serializers.ModelSerializer):
         return super().save(**kwargs)
 
     def get_messages(self, obj):
-        messages_data = {"results": MessageSerializer(Message.objects.filter(chat__public_id=obj.public_id)[:5][::-1],
-                                                      many=True).data}
-        return messages_data
+        messages = Message.objects.filter(chat__public_id=obj.public_id)
+        return {"results": MessageSerializer(messages[:5][::-1],
+                                             many=True).data,
+                "unread_messages_count": Message.objects.filter(~Q(sender=self.context["request"].user) &
+                                                                Q(is_read=False)).count()}
 
 # "2023-10-15T15:40:19.209225Z"
