@@ -100,3 +100,12 @@ class MessageViewSet(viewsets.ModelViewSet):
         message.is_read = True
         message.save()
         return Response(status=status.HTTP_200_OK)
+
+    @action(methods=["POST"], detail=False, url_path="read-all-messages")
+    def read_all_messages(self, request, *args, **kwargs):
+        messages = Message.objects.filter(chat__public_id=kwargs["chat_public_id"])
+        for message in messages:
+            if self.request.user != message.sender and message.is_read is False:
+                message.is_read = True
+                message.save()
+        return Response(status=status.HTTP_200_OK)

@@ -66,9 +66,11 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def get_messages(self, obj):
         messages = Message.objects.filter(chat__public_id=obj.public_id)
+        unread_messages_count = Message.objects.filter(~Q(sender=self.context["request"].user) &
+                                                       Q(is_read=False)).count()
         return {"results": MessageSerializer(messages[:5][::-1],
                                              many=True).data,
-                "unread_messages_count": Message.objects.filter(~Q(sender=self.context["request"].user) &
-                                                                Q(is_read=False)).count()}
+                "unread_messages_count": unread_messages_count,
+                "has_unread_messages": (True if unread_messages_count > 0 else False)}
 
 # "2023-10-15T15:40:19.209225Z"
