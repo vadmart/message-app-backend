@@ -66,8 +66,8 @@ class ChatSerializer(serializers.ModelSerializer):
 
     def get_messages(self, obj):
         messages = Message.objects.filter(chat__public_id=obj.public_id)
-        unread_messages_count = Message.objects.filter(~Q(sender=self.context["request"].user) &
-                                                       Q(is_read=False)).count()
+        unread_messages_count = Message.objects.exclude(sender=self.context["request"].user).filter(
+            is_read=False).count()
         return {"results": MessageSerializer(messages[:5][::-1],
                                              many=True).data,
                 "unread_messages_count": unread_messages_count,

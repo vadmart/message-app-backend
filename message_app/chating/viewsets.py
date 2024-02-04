@@ -59,6 +59,15 @@ class MessageViewSet(viewsets.ModelViewSet):
         chat_public_id = self.kwargs.get("chat_public_id")
         return Message.objects.filter(chat__public_id=chat_public_id)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(reversed(list(page)), many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(reversed(list(queryset)), many=True)
+        return Response(serializer.data)
+
     def create(self, request, *args, **kwargs):
         websocket_data = {"type": "create.message"}
         serializer = self.get_serializer(data=request.data, context={"request": request, "kwargs": self.kwargs})
@@ -103,7 +112,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     @action(methods=["POST"], detail=False, url_path="read-all-messages")
     def read_all_messages(self, request, *args, **kwargs):
-        messages = Message.objects.filter(chat__public_id=kwargs["chat_public_id"])
+        messages = self.get_queryset()
         for message in messages:
             if self.request.user != message.sender and message.is_read is False:
                 message.is_read = True
