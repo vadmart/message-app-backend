@@ -11,23 +11,19 @@ from message_app.chating import OneSignal
 from message_app.chating.models import Message, Chat
 from message_app.chating.serializers import MessageSerializer, ChatSerializer
 from message_app.auth.permissions import MessageUserPermission
-from rest_framework.reverse import reverse
-from django.core.paginator import Paginator
+
 
 channel_layer = get_channel_layer()
 
 
 class ChatViewSet(viewsets.ModelViewSet):
-    http_method_names = ["get", "delete"]
+    http_method_names = ["get", "post", "delete"]
     permission_classes = [IsAuthenticated]
     serializer_class = ChatSerializer
     lookup_field = "public_id"
 
     def get_queryset(self) -> QuerySet:
         return Chat.objects.filter(Q(first_user=self.request.user) | Q(second_user=self.request.user))
-
-    # def list(self, request, *args, **kwargs):
-    #     pass
 
     @action(detail=False)
     def get_chat_by_user(self, request):

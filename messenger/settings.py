@@ -87,11 +87,11 @@ MEDIA_URL = "media/"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'messageapp',
-        'PASSWORD': os.environ.get('POSTGRESQL_PASSWORD'),
-        'USER': 'postgres',
-        'HOST': os.environ.get("POSTGRESQL_HOST"),
-        'PORT': os.environ.get("POSTGRESQL_PORT")
+        'NAME': os.environ.get("POSTGRES_NAME"),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+        'USER': os.environ.get("POSTGRES_USER"),
+        'HOST': os.environ.get("POSTGRES_HOST"),
+        'PORT': os.environ.get("POSTGRES_PORT")
     }
 }
 
@@ -140,7 +140,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)]
+            "hosts": [("redis", 6379)]
         }
     }
 }
@@ -148,7 +148,7 @@ CHANNEL_LAYERS = {
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379"
+        "LOCATION": "redis://localhost:6379"
     }
 }
 
@@ -171,5 +171,5 @@ REST_FRAMEWORK = {
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-WSGI_APPLICATION = 'messenger.wsgi.application'
+# WSGI_APPLICATION = 'messenger.wsgi.application'
 ASGI_APPLICATION = 'messenger.asgi.application'
