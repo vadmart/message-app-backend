@@ -1,7 +1,8 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
-from message_app.auth.login.views import UserAuthView, UserVerifyView
+from message_app.auth.login.views import UserAuthView
+from message_app.auth.verify.views import UserVerifyView
 from message_app.auth.register.views import RegisterViewSet
 from message_app.chating.viewsets import ChatViewSet, MessageViewSet
 from message_app.auth.user.viewsets import UserViewSet
@@ -20,7 +21,7 @@ chat_router.register("message", MessageViewSet, basename="message")
 
 urlpatterns = [
     path("auth/login/", UserAuthView.as_view(), name="auth-login"),
-    path("auth/login/verify/", UserVerifyView.as_view(), name="auth-login-verify"),
+    path("auth/verify/", UserVerifyView.as_view(), name="auth-login-verify"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="auth-refresh"),
     path("auth/token/verify/", TokenVerifyView.as_view(), name="auth-token-verify"),
     path("", include([*router.urls, *chat_router.urls]))

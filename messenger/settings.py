@@ -153,7 +153,7 @@ CACHES = {
 }
 
 SIMPLE_JWT = {
-    "TOKEN_OBTAIN_SERIALIZER": "message_app.auth.login.serializers.TokenSerializer",
+    "TOKEN_OBTAIN_SERIALIZER": "message_app.auth.verify.serializers.TokenSerializer",
     "TOKEN_VERIFY_SERIALIZER": "message_app.auth.token_verify.serializers.UserTokenVerifySerializer",
     "ACCESS_TOKEN_LIFETIME": timedelta(weeks=25),
     "REFRESH_TOKEN_LIFETIME": timedelta(weeks=100),
