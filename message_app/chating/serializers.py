@@ -5,6 +5,7 @@ from message_app.auth.user.serializers import UserSerializer
 from message_app.chating.models import Message, Chat, User
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 
 class ContentObjectRelatedField(serializers.SlugRelatedField):
@@ -36,7 +37,7 @@ class MessageSerializer(serializers.ModelSerializer):
     def to_internal_value(self, data):
         if isinstance(data, QueryDict):
             data = data.dict()
-        chat = Chat.objects.get(public_id=self.context["kwargs"]["chat_public_id"])
+        chat = get_object_or_404(Chat, public_id=self.context["kwargs"]["chat_public_id"])
         content_type = ContentType.objects.get_for_model(Chat)
         data_to_save = {**data,
                         "content_type": content_type.pk,
@@ -52,7 +53,6 @@ class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
         exclude = ["id", "created_at"]
-        read_only_fields = ["public_id", "created_at"]
 
     def save(self, **kwargs):
         kwargs["first_user"] = self.context["request"].user

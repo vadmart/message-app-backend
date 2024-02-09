@@ -10,7 +10,7 @@ class MessageUserPermission(permissions.BasePermission):
             chat_public_id = request.parser_context["kwargs"].get("chat_public_id")
             chat = Chat.objects.filter(public_id=chat_public_id).first()
             if chat is None:
-                return False
+                return True
             if request.user == chat.first_user or request.user == chat.second_user:
                 return True
         return False

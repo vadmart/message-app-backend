@@ -12,7 +12,6 @@ from message_app.chating.models import Message, Chat
 from message_app.chating.serializers import MessageSerializer, ChatSerializer
 from message_app.auth.permissions import MessageUserPermission
 
-
 channel_layer = get_channel_layer()
 
 
@@ -27,17 +26,16 @@ class ChatViewSet(viewsets.ModelViewSet):
 
     @action(detail=False)
     def get_chat_by_user(self, request):
-        phone_number = request.query_params.get("phone_number")
-        if not phone_number:
+        user_public_id = request.query_params.get("user__public_id")
+        if not user_public_id:
             return Response(data={"detail": "The query parameter 'phone_number' is unfilled!"},
                             status=status.HTTP_400_BAD_REQUEST)
-        user = get_object_or_404(User, phone_number=phone_number)
-        chats = (Chat.objects.filter(first_user=self.request.user, second_user=user) |
-                 Chat.objects.filter(first_user=user, second_user=self.request.user))
-        if not chats.exists():
+        user = get_object_or_404(User, public_id=user_public_id)
+        chat = (self.get_queryset().filter(second_user=user) |
+                self.get_queryset().filter(first_user=user))
+        if not chat.exists():
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = self.get_serializer(chats[0])
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return Response(data=ChatSerializer(chat).data, status=status.HTTP_200_OK)
 
 
 class MessageViewSet(viewsets.ModelViewSet):

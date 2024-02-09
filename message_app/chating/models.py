@@ -39,6 +39,7 @@ class Message(AbstractModel):
 
 
 class Chat(AbstractModel):
+    public_id = models.UUIDField(null=False, unique=True, db_index=True)
     first_user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="first_user")
     second_user = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name="second_user")
     edited_at = None

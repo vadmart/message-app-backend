@@ -13,4 +13,3 @@ class UserAuthView(APIView):
             raise AuthenticationFailed
         print(otp.now())
         return Response(data={"status": "pending"}, status=status.HTTP_200_OK)
-
