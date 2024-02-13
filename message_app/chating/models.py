@@ -1,3 +1,5 @@
+import uuid
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
@@ -15,6 +17,7 @@ def path_upload_to(instance, filename):
 
 
 class Message(AbstractModel):
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
     content_type = models.ForeignKey(to=ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()

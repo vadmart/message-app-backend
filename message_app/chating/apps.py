@@ -5,6 +5,3 @@ class ChatingConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'message_app.chating'
     label = 'message_app_chating'
-
-    def ready(self):
-        from . import signals

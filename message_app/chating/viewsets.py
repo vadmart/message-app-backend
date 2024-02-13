@@ -24,6 +24,17 @@ class ChatViewSet(viewsets.ModelViewSet):
     def get_queryset(self) -> QuerySet:
         return Chat.objects.filter(Q(first_user=self.request.user) | Q(second_user=self.request.user))
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        chat = serializer.save()
+        async_to_sync(channel_layer.group_send)(str(chat.second_user.public_id),
+                                                {"type": "create_chat",
+                                                 "chat": serializer.data,
+                                                 "action": "create"
+                                                 })
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
     @action(detail=False)
     def get_chat_by_user(self, request):
         user_public_id = request.query_params.get("user__public_id")
@@ -63,13 +74,13 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        websocket_data = {"type": "create.message"}
         serializer = self.get_serializer(data=request.data, context={"request": request, "kwargs": self.kwargs})
         serializer.is_valid(raise_exception=True)
         message = serializer.save(sender=request.user)
-        websocket_data["message"] = serializer.data
         async_to_sync(channel_layer.group_send)(self.kwargs.get("chat_public_id"),
-                                                websocket_data)
+                                                {"type": "create.message",
+                                                 "message": serializer.data,
+                                                 "exclude_user_id": str(request.user.public_id)})
         OneSignal.Push.create_message_notification(message=message)
         headers = self.get_success_headers(serializer.data)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -85,15 +96,17 @@ class MessageViewSet(viewsets.ModelViewSet):
         self.perform_update(serializer)
         async_to_sync(channel_layer.group_send)(self.kwargs.get("chat_public_id"),
                                                 {"type": "update_message",
-                                                 "message": serializer.data})
-        return Response(serializer.data)
+                                                 "message": serializer.data,
+                                                 "exclude_user_id": str(request.user.public_id)})
+        return Response(status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         message_data = MessageSerializer(instance).data
         async_to_sync(channel_layer.group_send)(str(instance.chat.get().public_id),
                                                 {"type": "destroy_message",
-                                                 "message": message_data})
+                                                 "message": message_data,
+                                                 "exclude_user_id": str(request.user.public_id)})
         self.perform_destroy(instance)
         return Response(message_data)
 

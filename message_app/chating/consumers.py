@@ -1,4 +1,5 @@
 import json
+import logging
 from collections.abc import Coroutine
 
 from channels.db import database_sync_to_async
@@ -8,8 +9,8 @@ from django.db.models import QuerySet
 
 from message_app.auth.user.models import User
 from message_app.chating.models import Chat
-from message_app.chating.serializers import ChatSerializer, MessageSerializer
-from asgiref.sync import sync_to_async
+
+logger = logging.getLogger(__name__)
 
 
 def filter_chats_by_user(user: User) -> QuerySet[Chat]:
@@ -32,6 +33,11 @@ def get_chats_by_user(user: User) -> QuerySet[Chat]:
 
 
 class MessageConsumer(AsyncWebsocketConsumer):
+    users_online = 0
+
+    @staticmethod
+    def print_users_online():
+        print(f"Active connections: {MessageConsumer.users_online}")
 
     async def connect(self):
         await self.accept()
@@ -39,11 +45,17 @@ class MessageConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({"detail": "Your token is invalid or this user does not exist!"}))
             await self.close()
             return
+        await self.channel_layer.group_add(str(self.scope["user"].public_id), self.channel_name)
+        logger.info(f"{self.scope['user']} connected by WebSocket")
         chats = await get_chats_by_user(self.scope["user"])
         async for chat in chats:
             await self.channel_layer.group_add(str(chat.public_id), self.channel_name)
+        MessageConsumer.users_online += 1
+        self.print_users_online()
 
     async def create_message(self, event):
+        if event["exclude_user_id"] == str(self.scope["user"].public_id):
+            return
         await self.send(
             text_data=json.dumps({
                 "action": "create",
@@ -52,6 +64,8 @@ class MessageConsumer(AsyncWebsocketConsumer):
         )
 
     async def update_message(self, event):
+        if event["exclude_user_id"] == str(self.scope["user"].public_id):
+            return
         await self.send(
             json.dumps({
                 "message": event["message"],
@@ -60,6 +74,8 @@ class MessageConsumer(AsyncWebsocketConsumer):
         )
 
     async def destroy_message(self, event):
+        if event["exclude_user_id"] == str(self.scope["user"].public_id):
+            return
         await self.send(
             json.dumps({
                 "message": event["message"],
@@ -74,7 +90,17 @@ class MessageConsumer(AsyncWebsocketConsumer):
             })
         )
 
+    async def create_chat(self, event):
+        await self.send(
+            json.dumps({
+                "chat": event["chat"]
+            })
+        )
+
     async def disconnect(self, code):
+        logger.info(f"{self.scope['user']} disconnected from WebSocket")
         chats = await get_chats_by_user(self.scope["user"])
         async for chat in chats:
             await self.channel_layer.group_discard(str(chat.public_id), self.channel_name)
+        MessageConsumer.users_online -= 1
+        self.print_users_online()

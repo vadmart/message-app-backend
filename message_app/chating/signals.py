@@ -1,3 +1,3 @@
-from django.core.signals import request_finished
-from django.dispatch import receiver
+def my_receiver(sender, **kwargs):
+    print("Something was happened!")
 
