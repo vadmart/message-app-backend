@@ -12,182 +12,189 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from datetime import timedelta
 from pathlib import Path
+from configurations import Configuration, values
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
+class Dev(Configuration):
+    # Build paths inside the project like this: BASE_DIR / 'subdir'.
+    BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#ci-a7y7s1k6phwea6$e1c&p(_$ucl(unz#wyik7_dlwwn2j95'
+    # Quick-start development settings - unsuitable for production
+    # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+    # SECURITY WARNING: keep the secret key used in production secret!
+    SECRET_KEY = 'django-insecure-#ci-a7y7s1k6phwea6$e1c&p(_$ucl(unz#wyik7_dlwwn2j95'
 
-ALLOWED_HOSTS = ["*"]
-CORS_ALLOW_ALL_ORIGINS = True
+    # SECURITY WARNING: don't run with debug turned on in production!
+    DEBUG = values.BooleanValue(True)
 
-# Application definition
+    ALLOWED_HOSTS = ["*"]
+    CORS_ALLOW_ALL_ORIGINS = True
 
-INSTALLED_APPS = [
-    'daphne',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django_extensions',
-    'rest_framework_simplejwt',
-    'phonenumber_field',
-    'message_app',
-    'message_app.chating',
-    'message_app.auth',
-    'message_app.auth.user',
-    'corsheaders',
-]
+    # Application definition
 
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+    INSTALLED_APPS = [
+        'daphne',
+        'django.contrib.admin',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'django_extensions',
+        'rest_framework_simplejwt',
+        'phonenumber_field',
+        'message_app',
+        'message_app.chating',
+        'message_app.auth',
+        'message_app.auth.user',
+        'corsheaders',
+    ]
 
-ROOT_URLCONF = 'messenger.urls'
+    MIDDLEWARE = [
+        'django.middleware.security.SecurityMiddleware',
+        "corsheaders.middleware.CorsMiddleware",
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    ]
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
-        ,
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
+    ROOT_URLCONF = 'messenger.urls'
+
+    TEMPLATES = [
+        {
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+            'DIRS': [BASE_DIR / 'templates']
+            ,
+            'APP_DIRS': True,
+            'OPTIONS': {
+                'context_processors': [
+                    'django.template.context_processors.debug',
+                    'django.template.context_processors.request',
+                    'django.contrib.auth.context_processors.auth',
+                    'django.contrib.messages.context_processors.messages',
+                ],
+            },
         },
-    },
-]
+    ]
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = "media/"
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_URL = "media/"
 
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
+    # Database
+    # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get("POSTGRES_NAME"),
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        'USER': os.environ.get("POSTGRES_USER"),
-        'HOST': os.environ.get("POSTGRES_HOST"),
-        'PORT': os.environ.get("POSTGRES_PORT")
-    }
-}
-
-# Password validation
-# https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
-
-AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
-]
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.1/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'UTC'
-
-USE_I18N = True
-
-USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.1/howto/static-files/
-
-STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-AUTH_USER_MODEL = 'chating_user.User'
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("redis", 6379)]
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ.get("POSTGRES_NAME"),
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+            'USER': os.environ.get("POSTGRES_USER"),
+            'HOST': os.environ.get("POSTGRES_HOST"),
+            'PORT': os.environ.get("POSTGRES_PORT")
         }
     }
-}
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://localhost:6379"
-    }
-}
+    # Password validation
+    # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
-SIMPLE_JWT = {
-    "TOKEN_OBTAIN_SERIALIZER": "message_app.auth.verify.serializers.TokenSerializer",
-    "TOKEN_VERIFY_SERIALIZER": "message_app.auth.token_verify.serializers.UserTokenVerifySerializer",
-    "ACCESS_TOKEN_LIFETIME": timedelta(weeks=25),
-    "REFRESH_TOKEN_LIFETIME": timedelta(weeks=100),
-    "USER_ID_FIELD": "public_id"
-}
+    AUTH_PASSWORD_VALIDATORS = [
+        {
+            'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        },
+    ]
 
-AUTHENTICATION_BACKENDS = ['message_app.auth.user.backends.MessengerModelBackend']
+    # Internationalization
+    # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    "PAGE_SIZE": 20
-}
+    LANGUAGE_CODE = 'en-us'
 
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    TIME_ZONE = values.Value("UTC")
 
-# WSGI_APPLICATION = 'messenger.wsgi.application'
-ASGI_APPLICATION = 'messenger.asgi.application'
+    USE_I18N = True
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {"class": "logging.StreamHandler", "stream":
-            "ext://sys.stdout"},
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "INFO",
-    },
-    "loggers": {
-        "django": {
-            "propagate": True
+    USE_TZ = True
+
+    # Static files (CSS, JavaScript, Images)
+    # https://docs.djangoproject.com/en/4.1/howto/static-files/
+
+    STATIC_URL = 'static/'
+
+    # Default primary key field type
+    # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
+
+    DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+    AUTH_USER_MODEL = 'chating_user.User'
+
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [("redis", 6379)]
+            }
         }
     }
-}
+
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": "redis://localhost:6379"
+        }
+    }
+
+    REST_FRAMEWORK = {
+        'DEFAULT_AUTHENTICATION_CLASSES': (
+            'rest_framework_simplejwt.authentication.JWTAuthentication',
+        ),
+        "PAGE_SIZE": 20
+    }
+
+    SIMPLE_JWT = {
+        "TOKEN_OBTAIN_SERIALIZER": "message_app.auth.verify.serializers.TokenSerializer",
+        "TOKEN_VERIFY_SERIALIZER": "message_app.auth.token_verify.serializers.UserTokenVerifySerializer",
+        "ACCESS_TOKEN_LIFETIME": timedelta(weeks=25),
+        "REFRESH_TOKEN_LIFETIME": timedelta(weeks=100),
+        "USER_ID_FIELD": "public_id"
+    }
+
+    AUTHENTICATION_BACKENDS = ['message_app.auth.user.backends.MessengerModelBackend']
+
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+    ASGI_APPLICATION = 'messenger.asgi.application'
+
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {"class": "logging.StreamHandler", "stream":
+                "ext://sys.stdout"},
+        },
+        "root": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "loggers": {
+            "django": {
+                "propagate": True
+            }
+        }
+    }
+
+
+class Prod(Dev):
+    DEBUG = values.BooleanValue(False)
+    SECRET_KEY = values.SecretValue()
