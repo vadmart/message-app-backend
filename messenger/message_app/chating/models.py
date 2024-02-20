@@ -15,15 +15,6 @@ def path_upload_to(instance, filename):
     return f"{instance.sender.public_id}/{filename}"
 
 
-class MessageManager(AbstractManager):
-    def create(self, **kwargs):
-        if kwargs.get("chat"):
-            kwargs["content_object"] = kwargs["chat"]
-            del kwargs["chat"]
-        message = self.model(**kwargs)
-        message.save(using=self._db)
-        return message
-
 
 class Message(AbstractModel):
     public_id = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
@@ -37,7 +28,6 @@ class Message(AbstractModel):
     is_edited = models.BooleanField(default=False)
     deleted_for_users = models.ManyToManyField(to=User, related_name="deleted_messages")
 
-    objects = MessageManager()
 
     def __str__(self):
         return f"Sender: {self.sender}, content: {self.content}"

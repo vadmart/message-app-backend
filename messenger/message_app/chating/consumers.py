@@ -59,7 +59,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
         await self.send(
             text_data=json.dumps({
                 "action": "create",
-                **({"message": event["message"]} if "message" in event else {"chat": event["chat"]})
+                "message": event["message"]
             })
         )
 
@@ -93,6 +93,8 @@ class MessageConsumer(AsyncWebsocketConsumer):
     async def create_chat(self, event):
         if event["exclude_user_id"] == str(self.scope["user"].public_id):
             return
+        event["chat"]["messages"]["unread_messages_count"] = 1
+        event["chat"]["messages"]["has_unread_messages"] = True
         await self.send(
             json.dumps({
                 "chat": event["chat"],

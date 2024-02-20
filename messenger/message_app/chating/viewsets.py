@@ -30,10 +30,9 @@ class ChatViewSet(viewsets.ModelViewSet):
         chat = serializer.save()
         if request.data.get("messages"):
             results = request.data["messages"]["results"]
-            message_serializer = MessageSerializer(data=results, many=True, context={"kwargs": {"chat_public_id": chat.public_id}})
+            message_serializer = MessageSerializer(data=results, many=True)
             message_serializer.is_valid(raise_exception=True)
-            message_serializer.save(sender=request.user)
-            serializer.data["messages"] = {"results": [message_serializer.data]}
+            message_serializer.save(sender=request.user, chat=chat.public_id)
         async_to_sync(channel_layer.group_send)(str(chat.second_user.public_id),
                                                 {"type": "create.chat",
                                                  "chat": serializer.data,
@@ -79,9 +78,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={"request": request, "kwargs": self.kwargs})
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        message = serializer.save(sender=request.user)
+        message = serializer.save(sender=request.user, chat=self.kwargs.get("chat_public_id"))
         async_to_sync(channel_layer.group_send)(self.kwargs.get("chat_public_id"),
                                                 {"type": "create.message",
                                                  "message": serializer.data,
