@@ -34,6 +34,10 @@ class MessageSerializer(serializers.ModelSerializer):
             raise ValidationError("At least one of content or file is required")
         return super().validate(data)
 
+    def create(self, validated_data):
+        print(validated_data)
+        return super().create(validated_data)
+
     def to_internal_value(self, data):
         if isinstance(data, QueryDict):
             data = data.dict()
@@ -63,6 +67,7 @@ class ChatSerializer(serializers.ModelSerializer):
         second_user = User.objects.get(public_id=ret["second_user"])
         ret["second_user"] = UserSerializer(second_user).data
         return ret
+
 
     # def validate(self, attrs):
     #     if attrs.get("first_user") is None or attrs.get("second_user") is None:

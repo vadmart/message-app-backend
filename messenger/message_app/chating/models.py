@@ -1,19 +1,28 @@
 import uuid
 
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.utils.translation import gettext_lazy as _
-from message_app.abstract.models import AbstractModel
+from message_app.abstract.models import AbstractModel, AbstractManager
 
 User = get_user_model()
 
 
 def path_upload_to(instance, filename):
     return f"{instance.sender.public_id}/{filename}"
+
+
+class MessageManager(AbstractManager):
+    def create(self, **kwargs):
+        if kwargs.get("chat"):
+            kwargs["content_object"] = kwargs["chat"]
+            del kwargs["chat"]
+        message = self.model(**kwargs)
+        message.save(using=self._db)
+        return message
 
 
 class Message(AbstractModel):
@@ -27,6 +36,8 @@ class Message(AbstractModel):
     is_read = models.BooleanField(default=False)
     is_edited = models.BooleanField(default=False)
     deleted_for_users = models.ManyToManyField(to=User, related_name="deleted_messages")
+
+    objects = MessageManager()
 
     def __str__(self):
         return f"Sender: {self.sender}, content: {self.content}"

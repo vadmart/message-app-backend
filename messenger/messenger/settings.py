@@ -67,8 +67,7 @@ class Dev(Configuration):
     TEMPLATES = [
         {
             'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': [BASE_DIR / 'templates']
-            ,
+            'DIRS': [BASE_DIR / 'templates'],
             'APP_DIRS': True,
             'OPTIONS': {
                 'context_processors': [
@@ -89,7 +88,7 @@ class Dev(Configuration):
 
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'ENGINE': os.environ.get("DB_ENGINE"),
             'NAME': os.environ.get("POSTGRES_NAME"),
             'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
             'USER': os.environ.get("POSTGRES_USER"),
@@ -180,8 +179,7 @@ class Dev(Configuration):
         "version": 1,
         "disable_existing_loggers": False,
         "handlers": {
-            "console": {"class": "logging.StreamHandler", "stream":
-                "ext://sys.stdout"},
+            "console": {"class": "logging.StreamHandler", "stream": "ext://sys.stdout"},
         },
         "root": {
             "handlers": ["console"],

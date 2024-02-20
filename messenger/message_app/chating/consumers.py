@@ -91,9 +91,12 @@ class MessageConsumer(AsyncWebsocketConsumer):
         )
 
     async def create_chat(self, event):
+        if event["exclude_user_id"] == str(self.scope["user"].public_id):
+            return
         await self.send(
             json.dumps({
-                "chat": event["chat"]
+                "chat": event["chat"],
+                "action": "create"
             })
         )
 

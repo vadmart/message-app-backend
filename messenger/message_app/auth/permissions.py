@@ -1,5 +1,4 @@
 from rest_framework import permissions
-from rest_framework.exceptions import ValidationError
 from message_app.chating.models import Chat, Message
 
 
@@ -21,4 +20,3 @@ class MessageUserPermission(permissions.BasePermission):
             if request.user == chat.first_user or request.user == chat.second_user:
                 return True
         return False
-

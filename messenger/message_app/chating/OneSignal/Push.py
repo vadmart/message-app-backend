@@ -13,7 +13,6 @@ config = Configuration(app_key=os.environ.get('ONESIGNAL_REST_API_KEY'))
 
 def create_message_notification(message: Message):
     chat = message.content_object
-    #TODO: change the chat logic
     subscription_ids = [str(chat.first_user.public_id) if str(message.sender.public_id) != str(chat.first_user.public_id)
                         else str(chat.second_user.public_id)]
     with onesignal.ApiClient(config) as api_client:
