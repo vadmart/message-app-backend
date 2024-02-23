@@ -21,9 +21,9 @@ chat_router.register("message", MessageViewSet, basename="message")
 
 urlpatterns = [
     path("auth/login/", UserAuthView.as_view(), name="auth-login"),
-    path("auth/verify/", UserVerifyView.as_view(), name="auth-login-verify"),
-    path("auth/verify/resend/", UserVerifyResendView.as_view(), name="auth-token-verify-resend"),
-    path("auth/token/refresh/", TokenRefreshView.as_view(), name="auth-refresh"),
+    path("auth/verify/", UserVerifyView.as_view(), name="auth-verify"),
+    path("auth/verify/resend/", UserVerifyResendView.as_view(), name="auth-verify-resend"),
+    path("auth/token/refresh/", TokenRefreshView.as_view(), name="auth-token-refresh"),
     path("auth/token/verify/", TokenVerifyView.as_view(), name="auth-token-verify"),
     path("", include([*router.urls, *chat_router.urls]))
 ]

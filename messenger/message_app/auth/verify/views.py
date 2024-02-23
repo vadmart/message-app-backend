@@ -28,4 +28,4 @@ class UserVerifyResendView(views.APIView):
         if user is None:
             raise AuthenticationFailed
         print(otp.now())
-        return Response()
+        return Response(data=status.HTTP_200_OK)
