@@ -33,11 +33,24 @@ class ChatViewSet(viewsets.ModelViewSet):
             message_serializer = MessageSerializer(data=results, many=True)
             message_serializer.is_valid(raise_exception=True)
             message_serializer.save(sender=request.user, chat=chat.public_id)
+        async_to_sync(channel_layer.group_send)(str(request.user.public_id), {"type": "add_to_group",
+                                                                              "chat_id": serializer.data["public_id"]})
         async_to_sync(channel_layer.group_send)(str(chat.second_user.public_id),
                                                 {"type": "create.chat",
                                                  "chat": serializer.data,
                                                  "exclude_user_id": str(request.user.public_id)})
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        async_to_sync(channel_layer.group_send)(str(instance.public_id), {
+            "type": "destroy.chat",
+            "chat": self.get_serializer(instance).data,
+            "exclude_user_id": str(request.user.public_id)
+        })
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
     @action(detail=False)
     def get_chat_by_user(self, request):
@@ -46,11 +59,11 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response(data={"detail": "The query parameter 'phone_number' is unfilled!"},
                             status=status.HTTP_400_BAD_REQUEST)
         user = get_object_or_404(User, public_id=user_public_id)
-        chat = (self.get_queryset().filter(second_user=user) |
+        chats = (self.get_queryset().filter(second_user=user) |
                 self.get_queryset().filter(first_user=user))
-        if not chat.exists():
+        if not chats.exists():
             return Response(status=status.HTTP_404_NOT_FOUND)
-        return Response(data=ChatSerializer(chat).data, status=status.HTTP_200_OK)
+        return Response(data=ChatSerializer(chats[0], context={"request": request}).data, status=status.HTTP_200_OK)
 
 
 class MessageViewSet(viewsets.ModelViewSet):
