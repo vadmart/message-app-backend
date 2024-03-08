@@ -50,12 +50,14 @@ class MessageConsumer(AsyncWebsocketConsumer):
         chats = await get_chats_by_user(self.scope["user"])
         async for chat in chats:
             await self.channel_layer.group_add(str(chat.public_id), self.channel_name)
+        await self.send(json.dumps({"channel_name": self.channel_name}))
+        print(f"Channel name: {self.channel_name}")
         MessageConsumer.users_online += 1
         self.print_users_online()
 
     async def create_message(self, event):
         print("Start sending for user: " + str(self.scope["user"].public_id))
-        if event["exclude_user_id"] == str(self.scope["user"].public_id):
+        if event.get("exclude_ws_channel") == self.channel_name:
             return
         await self.send(
             text_data=json.dumps({

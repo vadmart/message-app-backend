@@ -91,13 +91,15 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
+        print(request.data)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         message = serializer.save(sender=request.user, chat=self.kwargs.get("chat_public_id"))
+        websocket_data = {"type": "create.message", "message": serializer.data}
+        if request.data.get("exclude_ws_channel"):
+            websocket_data.update({"exclude_ws_channel": request.data["exclude_ws_channel"]})
         async_to_sync(channel_layer.group_send)(self.kwargs.get("chat_public_id"),
-                                                {"type": "create.message",
-                                                 "message": serializer.data,
-                                                 "exclude_user_id": str(request.user.public_id)})
+                                                websocket_data)
         OneSignal.Push.create_message_notification(message=message)
         headers = self.get_success_headers(serializer.data)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
