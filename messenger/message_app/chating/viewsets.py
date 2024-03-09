@@ -113,19 +113,21 @@ class MessageViewSet(viewsets.ModelViewSet):
                                          context={"request": request, "kwargs": kwargs})
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
+        websocket_data = {"type": "update_message", "message": serializer.data}
+        if request.data.get("exclude_ws_channel"):
+            websocket_data.update({"exclude_ws_channel": request.data["exclude_ws_channel"]})
         async_to_sync(channel_layer.group_send)(self.kwargs.get("chat_public_id"),
-                                                {"type": "update_message",
-                                                 "message": serializer.data,
-                                                 "exclude_user_id": str(request.user.public_id)})
+                                                websocket_data)
         return Response(status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         message_data = MessageSerializer(instance).data
+        websocket_data = {"type": "destroy_message", "message": message_data}
+        if request.data.get("exclude_ws_channel"):
+            websocket_data.update({"exclude_ws_channel": request.data["exclude_ws_channel"]})
         async_to_sync(channel_layer.group_send)(str(instance.chat.get().public_id),
-                                                {"type": "destroy_message",
-                                                 "message": message_data,
-                                                 "exclude_user_id": str(request.user.public_id)})
+                                                 websocket_data)
         self.perform_destroy(instance)
         return Response(message_data)
 

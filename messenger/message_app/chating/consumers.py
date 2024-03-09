@@ -67,7 +67,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
         )
 
     async def update_message(self, event):
-        if event["exclude_user_id"] == str(self.scope["user"].public_id):
+        if event["exclude_ws_channel"] == self.channel_name:
             return
         await self.send(
             json.dumps({
@@ -77,7 +77,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
         )
 
     async def destroy_message(self, event):
-        if event["exclude_user_id"] == str(self.scope["user"].public_id):
+        if event.get("exclude_ws_channel") == self.channel_name:
             return
         await self.send(
             json.dumps({
