@@ -119,6 +119,14 @@ class MessageConsumer(AsyncWebsocketConsumer):
             })
         )
 
+    async def mark_messages_as_read(self, event):
+        if event.get("exclude_ws_channel") == self.channel_name:
+            return
+        await self.send(json.dumps({
+            "chat_id": event["chat_id"],
+            "action": "mark_messages_as_read"
+        }))
+
     async def disconnect(self, code):
         logger.info(f"{self.scope['user']} disconnected from WebSocket")
         chats = await get_chats_by_user(self.scope["user"])

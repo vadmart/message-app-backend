@@ -96,8 +96,8 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         message = serializer.save(sender=request.user, chat=self.kwargs.get("chat_public_id"))
         websocket_data = {"type": "create.message", "message": serializer.data}
-        if request.data.get("exclude_ws_channel"):
-            websocket_data.update({"exclude_ws_channel": request.data["exclude_ws_channel"]})
+        if exclude := request.data.get("exclude_ws_channel"):
+            websocket_data.update({"exclude_ws_channel": exclude})
         async_to_sync(channel_layer.group_send)(self.kwargs.get("chat_public_id"),
                                                 websocket_data)
         OneSignal.Push.create_message_notification(message=message)
@@ -114,8 +114,8 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         websocket_data = {"type": "update_message", "message": serializer.data}
-        if request.data.get("exclude_ws_channel"):
-            websocket_data.update({"exclude_ws_channel": request.data["exclude_ws_channel"]})
+        if exclude := request.data.get("exclude_ws_channel"):
+            websocket_data.update({"exclude_ws_channel": exclude})
         async_to_sync(channel_layer.group_send)(self.kwargs.get("chat_public_id"),
                                                 websocket_data)
         return Response(status=status.HTTP_200_OK)
@@ -124,8 +124,8 @@ class MessageViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         message_data = MessageSerializer(instance).data
         websocket_data = {"type": "destroy_message", "message": message_data}
-        if request.data.get("exclude_ws_channel"):
-            websocket_data.update({"exclude_ws_channel": request.data["exclude_ws_channel"]})
+        if exclude := request.data.get("exclude_ws_channel"):
+            websocket_data.update({"exclude_ws_channel": exclude})
         async_to_sync(channel_layer.group_send)(str(instance.chat.get().public_id),
                                                  websocket_data)
         self.perform_destroy(instance)
@@ -145,4 +145,9 @@ class MessageViewSet(viewsets.ModelViewSet):
             if self.request.user != message.sender and message.is_read is False:
                 message.is_read = True
                 message.save()
+        print(kwargs.get("chat_public_id"))
+        websocket_data = {"type": "mark_messages_as_read", "chat_id": kwargs.get("chat_public_id")}
+        if exclude := request.data.get("exclude_ws_channel"):
+            websocket_data.update({"exclude_ws_channel": exclude})
+        async_to_sync(channel_layer.group_send)(str(request.user.public_id), websocket_data)
         return Response(status=status.HTTP_200_OK)
