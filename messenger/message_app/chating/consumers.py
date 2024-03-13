@@ -95,7 +95,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
 
     async def create_chat(self, event):
         await self.channel_layer.group_add(event["chat"]["public_id"], self.channel_name)
-        if event["exclude_user_id"] == str(self.scope["user"].public_id):
+        if event.get("exclude_ws_channel") == self.channel_name:
             return
         event["chat"]["messages"]["unread_messages_count"] = 1
         event["chat"]["messages"]["has_unread_messages"] = True
@@ -106,11 +106,8 @@ class MessageConsumer(AsyncWebsocketConsumer):
             })
         )
 
-    async def add_to_group(self, event):
-        await self.channel_layer.group_add(event["chat_id"], self.channel_name)
-
     async def destroy_chat(self, event):
-        if event["exclude_user_id"] == str(self.scope["user"].public_id):
+        if event.get("exclude_ws_channel") == self.channel_name:
             return
         await self.send(
             json.dumps({
@@ -126,6 +123,15 @@ class MessageConsumer(AsyncWebsocketConsumer):
             "chat_id": event["chat_id"],
             "action": "mark_messages_as_read"
         }))
+
+    async def add_to_group(self, event):
+        await self.channel_layer.group_add(event["chat"]["public_id"], self.channel_name)
+        if event.get("exclude_ws_channel") != self.channel_name:
+            await self.send(json.dumps({
+                "chat": event["chat"],
+                "action": "create"
+            }))
+
 
     async def disconnect(self, code):
         logger.info(f"{self.scope['user']} disconnected from WebSocket")

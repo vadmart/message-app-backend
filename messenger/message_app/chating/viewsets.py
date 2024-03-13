@@ -33,12 +33,14 @@ class ChatViewSet(viewsets.ModelViewSet):
             message_serializer = MessageSerializer(data=results, many=True)
             message_serializer.is_valid(raise_exception=True)
             message_serializer.save(sender=request.user, chat=chat.public_id)
-        async_to_sync(channel_layer.group_send)(str(request.user.public_id), {"type": "add_to_group",
-                                                                              "chat_id": serializer.data["public_id"]})
+        async_to_sync(channel_layer.group_send)(str(request.user.public_id),
+                                                {"type": "add_to_group",
+                                                 "chat": serializer.data,
+                                                 "exclude_ws_channel": request.data.get("exclude_ws_channel")})
         async_to_sync(channel_layer.group_send)(str(chat.second_user.public_id),
                                                 {"type": "create.chat",
                                                  "chat": serializer.data,
-                                                 "exclude_user_id": str(request.user.public_id)})
+                                                 "exclude_ws_channel": request.data.get("exclude_ws_channel")})
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
@@ -46,7 +48,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         async_to_sync(channel_layer.group_send)(str(instance.public_id), {
             "type": "destroy.chat",
             "chat": self.get_serializer(instance).data,
-            "exclude_user_id": str(request.user.public_id)
+            "exclude_ws_channel": request.data.get("exclude_ws_channel")
         })
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -95,11 +97,10 @@ class MessageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         message = serializer.save(sender=request.user, chat=self.kwargs.get("chat_public_id"))
-        websocket_data = {"type": "create.message", "message": serializer.data}
-        if exclude := request.data.get("exclude_ws_channel"):
-            websocket_data.update({"exclude_ws_channel": exclude})
         async_to_sync(channel_layer.group_send)(self.kwargs.get("chat_public_id"),
-                                                websocket_data)
+                                                {"type": "create.message",
+                                                 "message": serializer.data,
+                                                 "exclude_ws_channel": request.data.get("exclude_ws_channel")})
         OneSignal.Push.create_message_notification(message=message)
         headers = self.get_success_headers(serializer.data)
         return Response(data=serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -113,21 +114,19 @@ class MessageViewSet(viewsets.ModelViewSet):
                                          context={"request": request, "kwargs": kwargs})
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        websocket_data = {"type": "update_message", "message": serializer.data}
-        if exclude := request.data.get("exclude_ws_channel"):
-            websocket_data.update({"exclude_ws_channel": exclude})
         async_to_sync(channel_layer.group_send)(self.kwargs.get("chat_public_id"),
-                                                websocket_data)
+                                                {"type": "update_message",
+                                                 "message": serializer.data,
+                                                 "exclude_ws_channel": request.data.get("exclude_ws_channel")})
         return Response(status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         message_data = MessageSerializer(instance).data
-        websocket_data = {"type": "destroy_message", "message": message_data}
-        if exclude := request.data.get("exclude_ws_channel"):
-            websocket_data.update({"exclude_ws_channel": exclude})
         async_to_sync(channel_layer.group_send)(str(instance.chat.get().public_id),
-                                                 websocket_data)
+                                                 {"type": "destroy_message",
+                                                  "message": message_data,
+                                                  "exclude_ws_channel": request.data.get("exclude_ws_channel")})
         self.perform_destroy(instance)
         return Response(message_data)
 
