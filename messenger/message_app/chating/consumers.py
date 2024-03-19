@@ -56,9 +56,9 @@ class MessageConsumer(AsyncWebsocketConsumer):
         self.print_users_online()
 
     async def create_message(self, event):
-        print("Start sending for user: " + str(self.scope["user"].public_id))
         if event.get("exclude_ws_channel") == self.channel_name:
             return
+        print("Start sending for user: " + str(self.scope["user"].public_id))
         await self.send(
             text_data=json.dumps({
                 "action": "create",
@@ -97,8 +97,6 @@ class MessageConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_add(event["chat"]["public_id"], self.channel_name)
         if event.get("exclude_ws_channel") == self.channel_name:
             return
-        event["chat"]["messages"]["unread_messages_count"] = 1
-        event["chat"]["messages"]["has_unread_messages"] = True
         await self.send(
             json.dumps({
                 "chat": event["chat"],

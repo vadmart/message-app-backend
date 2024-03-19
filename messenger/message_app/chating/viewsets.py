@@ -11,6 +11,7 @@ from message_app.chating import OneSignal
 from message_app.chating.models import Message, Chat
 from message_app.chating.serializers import MessageSerializer, ChatSerializer
 from message_app.auth.permissions import MessageUserPermission
+import json
 
 channel_layer = get_channel_layer()
 
@@ -28,11 +29,6 @@ class ChatViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         chat = serializer.save()
-        if request.data.get("messages"):
-            results = request.data["messages"]["results"]
-            message_serializer = MessageSerializer(data=results, many=True)
-            message_serializer.is_valid(raise_exception=True)
-            message_serializer.save(sender=request.user, chat=chat.public_id)
         async_to_sync(channel_layer.group_send)(str(request.user.public_id),
                                                 {"type": "add_to_group",
                                                  "chat": serializer.data,
