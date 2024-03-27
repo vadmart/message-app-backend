@@ -1,10 +1,10 @@
-from rest_framework.exceptions import ValidationError
-from rest_framework import serializers
-from message_app.auth.user.serializers import UserSerializer
-from message_app.chating.models import Message, Chat, User, GroupChat
-from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
+from message_app.auth.user.serializers import UserSerializer
+from message_app.chating.models import Message, Chat, User, GroupChat
 
 
 class ContentObjectRelatedField(serializers.SlugRelatedField):
@@ -61,20 +61,14 @@ class ChatSerializer(serializers.ModelSerializer):
         ret["second_user"] = UserSerializer(second_user).data
         return ret
 
-
-    # def validate(self, attrs):
-    #     if attrs.get("first_user") is None or attrs.get("second_user") is None:
-    #         raise ValidationError("Parameters 'first_user' and 'second_user' must be set!")
-
     def get_messages(self, obj):
         messages = Message.objects.filter(chat__public_id=obj.public_id)
         filtered_messages = messages.filter(~Q(sender=self.context["request"].user) &
-                                                Q(is_read=False))
+                                            Q(is_read=False))
         return {
             "results": MessageSerializer(messages[:5][::-1], many=True).data,
             "unread_messages_count": filtered_messages.count(),
             "has_unread_messages": filtered_messages.exists()
         }
-
 
 # "2023-10-15T15:40:19.209225Z"

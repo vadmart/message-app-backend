@@ -196,3 +196,5 @@ class Dev(Configuration):
 class Prod(Dev):
     DEBUG = values.BooleanValue(False)
     SECRET_KEY = values.SecretValue()
+    CSRF_TRUSTED_ORIGINS = ["http://localhost:1337"]
+    MEDIA_URL = f"{os.environ.get('HOST_URL')}/media/"

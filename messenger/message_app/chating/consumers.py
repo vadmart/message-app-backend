@@ -113,6 +113,7 @@ class MessageConsumer(AsyncWebsocketConsumer):
                 "action": "destroy"
             })
         )
+        await self.channel_layer.group_discard(event["chat"]["public_id"], self.channel_name)
 
     async def mark_messages_as_read(self, event):
         if event.get("exclude_ws_channel") == self.channel_name:
@@ -129,7 +130,6 @@ class MessageConsumer(AsyncWebsocketConsumer):
                 "chat": event["chat"],
                 "action": "create"
             }))
-
 
     async def disconnect(self, code):
         logger.info(f"{self.scope['user']} disconnected from WebSocket")

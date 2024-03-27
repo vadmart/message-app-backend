@@ -11,7 +11,6 @@ from message_app.chating import OneSignal
 from message_app.chating.models import Message, Chat
 from message_app.chating.serializers import MessageSerializer, ChatSerializer
 from message_app.auth.permissions import MessageUserPermission
-import json
 
 channel_layer = get_channel_layer()
 
@@ -49,7 +48,6 @@ class ChatViewSet(viewsets.ModelViewSet):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
     @action(detail=False)
     def get_chat_by_user(self, request):
         user_public_id = request.query_params.get("user__public_id")
@@ -58,7 +56,7 @@ class ChatViewSet(viewsets.ModelViewSet):
                             status=status.HTTP_400_BAD_REQUEST)
         user = get_object_or_404(User, public_id=user_public_id)
         chats = (self.get_queryset().filter(second_user=user) |
-                self.get_queryset().filter(first_user=user))
+                 self.get_queryset().filter(first_user=user))
         if not chats.exists():
             return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(data=ChatSerializer(chats[0], context={"request": request}).data, status=status.HTTP_200_OK)
@@ -120,9 +118,9 @@ class MessageViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         message_data = MessageSerializer(instance).data
         async_to_sync(channel_layer.group_send)(str(instance.chat.get().public_id),
-                                                 {"type": "destroy_message",
-                                                  "message": message_data,
-                                                  "exclude_ws_channel": request.data.get("exclude_ws_channel")})
+                                                {"type": "destroy_message",
+                                                 "message": message_data,
+                                                 "exclude_ws_channel": request.data.get("exclude_ws_channel")})
         self.perform_destroy(instance)
         return Response(message_data)
 
